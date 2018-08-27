@@ -3,6 +3,7 @@ package io.github.lionisaqt.actors;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.physics.box2d.MassData;
 
 import io.github.lionisaqt.JuicyShmup;
 import io.github.lionisaqt.screens.InGame;
@@ -10,24 +11,31 @@ import io.github.lionisaqt.screens.InGame;
 import static io.github.lionisaqt.JuicyShmup.PPM;
 
 public class Player extends SpaceEntity {
-    private float shotTimer, fireDelay, turnSpeedKey, turnSpeedTouch;
+    private float shotTimer, fireDelay;
 
     public Player(JuicyShmup game, InGame screen, float x, float y) {
         super(screen);
-        turnSpeedKey = 250 * PPM;
-        turnSpeedTouch = -250 * PPM;
         scale = 0.25f * PPM;
         fireDelay = 0.1f;
+        maxHp = 500;
+        hp = maxHp;
+        dmg = 100;
+        speed = 10;
+        impact = 0f;
+        friendly = true;
+        setAll();
+
         if (sprite == null) sprite = new Sprite(game.assets.manager.get(game.assets.ship));
         sprite.setScale(scale);
 
         makeBody(x, y, "square");
-        body.setUserData("player");
+        body.setUserData(info);
         sprite.setPosition(body.getPosition().x, body.getPosition().y);
     }
 
     @Override
     public void update(float deltaTime) {
+        super.update(deltaTime);
         handleInput(deltaTime);
     }
     
@@ -49,19 +57,19 @@ public class Player extends SpaceEntity {
                 if (Gdx.input.isTouched()) { shoot(deltaTime); }
 
                 // Accelerometer movement
-                xSpeed = Gdx.input.getAccelerometerX() * turnSpeedTouch;
-                ySpeed = Gdx.input.getAccelerometerY() * turnSpeedTouch;
+                xSpeed = Gdx.input.getAccelerometerX() * -speed;
+                ySpeed = Gdx.input.getAccelerometerY() * speed;
 
                 break;
             case Desktop:
                 if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-                    xSpeed += -turnSpeedKey;
+                    xSpeed += -speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-                    xSpeed += turnSpeedKey;
+                    xSpeed += speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.UP))
-                    ySpeed += turnSpeedKey;
+                    ySpeed += speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-                    ySpeed += -turnSpeedKey;
+                    ySpeed += -speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.SPACE))
                     shoot(deltaTime);
             default:
@@ -76,10 +84,10 @@ public class Player extends SpaceEntity {
     private void shoot(float deltaTime) {
         shotTimer -= deltaTime; // Run timer between shots
         if (shotTimer <= 0) {
-            Bullet bullet = screen.bulletPool.obtain();     // Obtain a bullet from pool, or creates one if a free bullet is unavailable
-            bullet.init(body.getPosition(), true);  // Initializes bullet
-            screen.bullets.add(bullet);                     // Adds bullet to list of active bullets
-            screen.tManager.addTrauma(bullet.getImpact());  // Adds impact to trauma manager
+            Bullet b = screen.bulletPool.obtain();     // Obtain a bullet from pool, or creates one if a free bullet is unavailable
+            b.init(body.getPosition().x, body.getPosition().y, true);  // Initializes bullet
+            screen.bullets.add(b);                     // Adds bullet to list of active bullets
+            screen.tManager.addTrauma(b.getImpact());  // Adds impact to trauma manager
             shotTimer += fireDelay;                         // Add delay for next shot
         }
     }

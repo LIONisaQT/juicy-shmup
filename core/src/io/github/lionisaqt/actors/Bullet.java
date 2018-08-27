@@ -1,10 +1,9 @@
 package io.github.lionisaqt.actors;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.utils.Pool.Poolable;
 
 import box2dLight.PointLight;
@@ -14,45 +13,53 @@ import io.github.lionisaqt.screens.InGame;
 import static io.github.lionisaqt.JuicyShmup.PPM;
 
 public class Bullet extends SpaceEntity implements Poolable {
+    private JuicyShmup game;
     private PointLight bLight;
     private Color bColor;
-    private float speed, impact;
 
     public Bullet(JuicyShmup game, InGame screen) {
         super(screen);
-        if (sprite == null) sprite = new Sprite(game.assets.manager.get(game.assets.bullet));
-        sprite.setScale(0.5f * PPM);
-        bColor = new Color(1, 1, 1, 1);
-        bLight = new PointLight(screen.rayHandler, 128, bColor, 50 * PPM, 0, 0);
-        bLight.setStaticLight(false);
-        bLight.setSoft(true);
+        this.game = game;
+        maxHp = 1;
+        hp = maxHp;
+        dmg = 10;
+        speed = 25;
+        impact = 0.1f;
+        isPlayer = false;
     }
 
-    // CR799889038
+    public void init(float x, float y, boolean friendly) {
+        if (sprite == null) {
+            sprite = new Sprite(game.assets.manager.get(game.assets.bullet));
+            sprite.setScale(0.1f * PPM);
+        }
 
-    public void init(Vector2 v, boolean friendly) {
-        speed = 15;
-        impact = 1f;
-
-        bColor = friendly ? bColor.set(0, 1, 0, 1) : bColor.set(1, 0, 0, 1);
-
-        // TODO: Play sound here
-
-        makeBody(v.x, v.y, "circle");
+        if (body == null) makeBody(x, y, "circle");
         body.setBullet(true);
-        body.setUserData(friendly ? "friendly" : "enemy");
+        this.friendly = friendly;
+        setAll();
+        body.setUserData(info);
         body.setLinearVelocity(0, friendly ? speed : -speed);
 
-        bLight.setPosition(body.getPosition());
-        bLight.setColor(bColor);
+        if (bColor == null)
+            bColor = new Color(friendly ? 0 : 1, friendly ? 1 : 0, 0, 1);
+        else
+            bColor.set(friendly ? 0 : 1, friendly ? 1 : 0, 0, 1);
+
+        if (bLight == null) bLight = new PointLight(screen.rayHandler, 128, bColor, 50 * PPM, body.getPosition().x, body.getPosition().y);
+        bLight.setStaticLight(false);
+        bLight.setSoft(true);
+        bLight.attachToBody(body);
+
+        // TODO: Play sound here
     }
 
     public void update(float deltaTime) {
+        super.update(deltaTime);
         sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
-        bLight.setPosition(body.getPosition());
 
-        if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT  * PPM) {
-            bLight.setColor(bColor.r, bColor.g, bColor.b, 0);
+        if (hp <= 0 || body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT  * PPM) {
+            bLight.setActive(false);
             free();
         }
     }
@@ -68,7 +75,18 @@ public class Bullet extends SpaceEntity implements Poolable {
 
     @Override
     public void reset() {
-        impact = 0;
-        speed = 0;
+        for (Fixture f : body.getFixtureList())
+            body.destroyFixture(f);
+        body = null;
+        sprite = null;
+        bColor = null;
+        bLight = null;
+        hp = maxHp;
+        setAll();
+    }
+
+    public void dispose() {
+        super.dispose();
+        bLight.dispose();
     }
 }

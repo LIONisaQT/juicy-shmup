@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
+import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
@@ -15,10 +16,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 
+import java.util.Random;
+
 import box2dLight.PointLight;
 import box2dLight.RayHandler;
 import io.github.lionisaqt.JuicyShmup;
 import io.github.lionisaqt.actors.Bullet;
+import io.github.lionisaqt.actors.Enemy;
 import io.github.lionisaqt.actors.Player;
 import io.github.lionisaqt.utils.B2dContactListener;
 import io.github.lionisaqt.utils.TraumaManager;
@@ -26,18 +30,21 @@ import io.github.lionisaqt.utils.TraumaManager;
 import static io.github.lionisaqt.JuicyShmup.PPM;
 
 public class InGame extends MyScreen {
-    public ParticleEffectPool effectPool;                  // Pool of effects
-    public Array<ParticleEffectPool.PooledEffect> effects; // Array of active effects
-    public ParticleEffect explosion;                       // The effect loaded
-
-    public Array<Bullet> bullets;                          // Array of active bullets
-    public Pool<Bullet> bulletPool;                        // Pool of bullets
+    public ParticleEffectPool effectPool;                   // Pool of effects
+    public Array<PooledEffect> effects;                     // Array of active effects
+    public ParticleEffect explosion;                        // The effect loaded
 
     private World world;
     private Box2DDebugRenderer b2dr;
     public RayHandler rayHandler;
 
     public TraumaManager tManager;
+
+    public Array<Bullet> bullets;                           // Array of active bullets
+    public Pool<Bullet> bulletPool;                         // Pool of bullets
+
+    public Array<Enemy> enemies;
+    public Pool<Enemy> enemyPool;
 
     private Player player;
 
@@ -50,10 +57,12 @@ public class InGame extends MyScreen {
 
         rayHandler = new RayHandler(world);
 
-        effects = new Array<ParticleEffectPool.PooledEffect>();
+        effects = new Array<>();
         explosion = new ParticleEffect();
         explosion.load(Gdx.files.internal("effects/explosion.p"), Gdx.files.internal("effects/"));
         effectPool = new ParticleEffectPool(explosion, 1, 100);
+
+        tManager = new TraumaManager(camera);
 
         final InGame iG = this;
         bullets = new Array<>();
@@ -64,9 +73,20 @@ public class InGame extends MyScreen {
             }
         };
 
+        if (player == null) player = new Player(game, this, JuicyShmup.GAME_WIDTH / 2 * PPM, 100 * PPM);
 
-        player = new Player(game, this, JuicyShmup.GAME_WIDTH / 2 * PPM, 100 * PPM);
-        tManager = new TraumaManager(camera, player);
+        enemies = new Array<>();
+        enemyPool = new Pool<Enemy>() {
+            @Override
+            protected Enemy newObject() {
+                return new Enemy(game, iG);
+            }
+        };
+        for (int i = 0; i < 10; i++) {
+            Enemy e = enemyPool.obtain();
+            e.init();
+            enemies.add(e);
+        }
 
         PointLight pl = new PointLight(rayHandler, 128, new Color(0.2f,1,1,1f), 300 * PPM, JuicyShmup.GAME_WIDTH / 2 * PPM, JuicyShmup.GAME_HEIGHT / 2 * PPM);
         pl.setStaticLight(false);
@@ -102,8 +122,8 @@ public class InGame extends MyScreen {
     void update(float deltaTime) {
         world.step(1/60f, 6, 2);
         player.update(deltaTime);
-
         for (Bullet b : bullets) b.update(deltaTime);
+        for (Enemy e : enemies) e.update(deltaTime);
 
 //        if (Gdx.input.justTouched()) {
 //            // Grabs particle effect from pool (or creates a new one if one isn't free)
@@ -135,6 +155,7 @@ public class InGame extends MyScreen {
 
         batch.begin();
         player.draw(batch);
+        for (Enemy e : enemies) e.draw(batch);
         for (Bullet b : bullets) b.draw(batch);
         for (ParticleEffectPool.PooledEffect p : effects) p.draw(batch);
         batch.end();
@@ -158,7 +179,9 @@ public class InGame extends MyScreen {
             bullets.get(i).free();    // Free all bullets back to pool
         bullets.clear();              // Clear current bullets array
 
-        player.dispose();
+        for (int i = enemies.size -1 ; i >= 0; i--)
+            enemies.get(i).free();
+        enemies.clear();
 
         rayHandler.dispose();
     }

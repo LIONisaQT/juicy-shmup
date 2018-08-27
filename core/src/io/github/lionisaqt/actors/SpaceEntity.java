@@ -6,21 +6,28 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.MassData;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
 import io.github.lionisaqt.screens.InGame;
+import io.github.lionisaqt.utils.EntityInfo;
 
 abstract class SpaceEntity {
+    private World world;
+
     InGame screen;
-    World world;
-    public Body body;
+    Body body;
     Sprite sprite;
-    float scale;
+    float scale, impact;
+    short hp, maxHp, dmg, speed;
+    boolean friendly, isPlayer;
+    EntityInfo info;
 
     SpaceEntity(InGame screen) {
         this.screen = screen;
         world = screen.getWorld();
+        info = new EntityInfo();
     }
 
     void makeBody(float x, float y, String s) {
@@ -33,7 +40,7 @@ abstract class SpaceEntity {
         switch (s) {
             case "circle":
                 CircleShape shape = new CircleShape();
-                shape.setRadius(sprite.getWidth() * sprite.getScaleX() / 2);
+                shape.setRadius(sprite.getWidth() * sprite.getScaleX() * 2);
                 fDef.shape = shape;
                 fDef.isSensor = true;
                 body.createFixture(fDef);
@@ -50,9 +57,26 @@ abstract class SpaceEntity {
         }
     }
 
-    public abstract void update(float deltaTime);
+    public void update(float deltaTime) { updateValues(); }
 
     public void draw(SpriteBatch batch) { sprite.draw(batch); }
+
+    void setAll() {
+        info.hp = hp;
+        info.dmg = dmg;
+        info.speed = speed;
+        info.impact = impact;
+        info.friendly = friendly;
+        info.isPlayer = isPlayer;
+    }
+
+    private void updateValues() {
+        hp = info.hp;
+        dmg = info.dmg;
+        speed = info.speed;
+        impact = info.impact;
+        friendly = info.friendly;
+    }
 
     public void dispose() { sprite.getTexture().dispose(); }
 }

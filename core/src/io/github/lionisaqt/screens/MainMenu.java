@@ -1,5 +1,7 @@
 package io.github.lionisaqt.screens;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -39,7 +41,12 @@ public class MainMenu extends MyScreen {
     }
 
     @Override
-    void update(float deltaTime) {}
+    void update(float deltaTime) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            game.setScreen(new InGame(game));
+            dispose();
+        }
+    }
 
     @Override
     void draw(SpriteBatch batch) {}

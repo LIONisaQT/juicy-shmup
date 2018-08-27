@@ -11,18 +11,16 @@ import io.github.lionisaqt.actors.Player;
 import static io.github.lionisaqt.JuicyShmup.PPM;
 
 public class TraumaManager {
-    private final Player player;
     private final OrthographicCamera camera;
     private float trauma, maxAngle, angle, maxOffset, lastTrauma;
     private Vector2 offset;
 
-    public TraumaManager(OrthographicCamera camera, Player player) {
-        this.player = player;
+    public TraumaManager(OrthographicCamera camera) {
         this.camera = camera;
         trauma = 0;
-        maxAngle = 32f * PPM;
+        maxAngle = 0f * PPM; // Swap to 32f for rotational shake
         angle = 0;
-        maxOffset = 0f * PPM;
+        maxOffset = 10f * PPM;
         lastTrauma = 0;
         offset = new Vector2();
     }
@@ -37,15 +35,15 @@ public class TraumaManager {
                     maxOffset * shakeAmount() * (new Random().nextFloat()*2-1)
             );
             camera.position.set(
-                    player.body.getPosition().x + offset.x,
-                    player.body.getPosition().y + offset.y,
+                    camera.viewportWidth / 2 + offset.x,
+                    camera.viewportHeight / 2 + offset.y,
                     0
             );
             decreaseTrauma(deltaTime);
         } else {
             trauma = 0;
             camera.up.set(0, 1, 0);
-            camera.position.set(player.body.getPosition().x, player.body.getPosition().y, 0);
+            camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0);
         }
     }
 
@@ -58,7 +56,7 @@ public class TraumaManager {
 
     public final void setTrauma(float t) { trauma = t; }
 
-    public void decreaseTrauma(float deltaTime) { setTrauma(trauma -= deltaTime); }
+    public void decreaseTrauma(float deltaTime) { setTrauma(trauma -= deltaTime * 2); }
 
     public final float getMaxAngle() { return maxAngle; }
     public final float getMaxOffset() { return maxOffset; }

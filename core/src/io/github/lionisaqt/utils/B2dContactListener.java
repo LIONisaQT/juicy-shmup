@@ -12,11 +12,15 @@ public class B2dContactListener implements ContactListener {
     public void beginContact(Contact contact) {
         Fixture fA = contact.getFixtureA();
         Fixture fB = contact.getFixtureB();
+        EntityInfo eA, eB;
 
         if (fA == null || fB == null) return;
+        eA = (EntityInfo)fA.getBody().getUserData();
+        eB = (EntityInfo)fB.getBody().getUserData();
 
-        if (fA.getBody().getUserData().equals("player") && fB.getBody().getUserData().equals("enemy")) {
-            Gdx.app.log(getClass().getSimpleName(), fA.getBody().getUserData() + " collided with " + fB.getBody().getUserData());
+        if ((eA.friendly && !eB.friendly) || (!eA.friendly && eB.friendly)) {
+            eA.hp -= eB.dmg;
+            eB.hp -= eA.dmg;
         }
     }
 

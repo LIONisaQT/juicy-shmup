@@ -1,8 +1,6 @@
 package io.github.lionisaqt;
 
-import com.badlogic.gdx.Application.ApplicationType;
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
@@ -10,7 +8,7 @@ import io.github.lionisaqt.screens.MainMenu;
 import io.github.lionisaqt.utils.Assets;
 
 public class JuicyShmup extends Game {
-	public static final float GAME_HEIGHT = 768;
+	public static final float GAME_HEIGHT = 1080;
 	public static final float GAME_WIDTH = GAME_HEIGHT * 9/16f;
 	public static final float PPM = 1/32f;
 

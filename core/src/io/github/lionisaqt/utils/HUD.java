@@ -9,19 +9,25 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 import io.github.lionisaqt.JuicyShmup;
 
+/** Heads-up display for the game.
+ * @author Ryan Shee */
 public class HUD {
+    /* Need a stage to draw the table to */
     public Stage stage;
-    private Viewport viewport;
+
+    /* Need a table to put the buttons and text on */
     public Table table;
 
+    /** Constructs a HUD.
+     * @param batch The SpriteBatch for batch drawing. */
     public HUD(SpriteBatch batch) {
-        viewport = new StretchViewport(JuicyShmup.GAME_WIDTH, JuicyShmup.GAME_HEIGHT, new OrthographicCamera());
+        Viewport viewport = new StretchViewport(JuicyShmup.GAME_WIDTH, JuicyShmup.GAME_HEIGHT, new OrthographicCamera());
         stage = new Stage(viewport, batch);
-
         table = new Table();
         stage.addActor(table);
     }
 
+    /** Frees stage from memory. */
     public void dispose() {
         stage.dispose();
     }

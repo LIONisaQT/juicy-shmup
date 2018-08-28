@@ -10,8 +10,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 
 import io.github.lionisaqt.JuicyShmup;
 
+/** The main menu.
+ * @author Ryan Shee */
 public class MainMenu extends MyScreen {
-
     public MainMenu(final JuicyShmup game) {
         super(game);
     }
@@ -49,7 +50,7 @@ public class MainMenu extends MyScreen {
     }
 
     @Override
-    void draw(SpriteBatch batch) {}
+    void draw(SpriteBatch batch) { /* There's nothing to draw here yet */}
 
     @Override
     public void dispose() {

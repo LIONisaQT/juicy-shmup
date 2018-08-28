@@ -3,30 +3,38 @@ package io.github.lionisaqt.actors;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.physics.box2d.MassData;
 
 import io.github.lionisaqt.JuicyShmup;
 import io.github.lionisaqt.screens.InGame;
 
 import static io.github.lionisaqt.JuicyShmup.PPM;
 
+/** The player Object.
+* @author Ryan Shee */
 public class Player extends SpaceEntity {
+    /* The time since the last shot and how long the delay between shots are */
     private float shotTimer, fireDelay;
 
+    /** Constructs a new player at the given coordinates.
+     * @param game Reference to the game for assets
+     * @param screen Reference for in-game stuff
+     * @param x Initial x position
+     * @param y Initial y position */
     public Player(JuicyShmup game, InGame screen, float x, float y) {
         super(screen);
         scale = 0.25f * PPM;
         fireDelay = 0.1f;
-        maxHp = 500;
-        hp = maxHp;
-        dmg = 100;
-        speed = 10;
-        impact = 0f;
-        friendly = true;
-        setAll();
+        info.maxHp = 500;
+        info.hp = info.maxHp;
+        info.dmg = 100;
+        info.speed = 10;
+        info.impact = 0f;
+        info.friendly = true;
 
-        if (sprite == null) sprite = new Sprite(game.assets.manager.get(game.assets.ship));
-        sprite.setScale(scale);
+        if (sprite == null) {
+            sprite = new Sprite(game.assets.manager.get(game.assets.ship));
+            sprite.setScale(scale);
+        }
 
         makeBody(x, y, "square");
         body.setUserData(info);
@@ -35,10 +43,11 @@ public class Player extends SpaceEntity {
 
     @Override
     public void update(float deltaTime) {
-        super.update(deltaTime);
         handleInput(deltaTime);
     }
-    
+
+    /** Handles input and sets velocity accordingly, and makes sprite follow body.
+     * @param deltaTime Time since the last frame was called */
     private void handleInput(float deltaTime) {
         float xSpeed = 0;
         float ySpeed = 0;
@@ -57,19 +66,19 @@ public class Player extends SpaceEntity {
                 if (Gdx.input.isTouched()) { shoot(deltaTime); }
 
                 // Accelerometer movement
-                xSpeed = Gdx.input.getAccelerometerX() * -speed;
-                ySpeed = Gdx.input.getAccelerometerY() * speed;
+                xSpeed = Gdx.input.getAccelerometerX() * -info.speed;
+                ySpeed = Gdx.input.getAccelerometerY() * info.speed;
 
                 break;
             case Desktop:
                 if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-                    xSpeed += -speed;
+                    xSpeed += -info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-                    xSpeed += speed;
+                    xSpeed += info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.UP))
-                    ySpeed += speed;
+                    ySpeed += info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-                    ySpeed += -speed;
+                    ySpeed += -info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.SPACE))
                     shoot(deltaTime);
             default:
@@ -81,17 +90,20 @@ public class Player extends SpaceEntity {
         stayInBounds();
     }
 
+    /** Fires a bullet, obtained from the pool. Adds trauma.
+     * @param deltaTime Time since last frame was called */
     private void shoot(float deltaTime) {
         shotTimer -= deltaTime; // Run timer between shots
         if (shotTimer <= 0) {
-            Bullet b = screen.bulletPool.obtain();     // Obtain a bullet from pool, or creates one if a free bullet is unavailable
-            b.init(body.getPosition().x, body.getPosition().y, true);  // Initializes bullet
-            screen.bullets.add(b);                     // Adds bullet to list of active bullets
-            screen.tManager.addTrauma(b.getImpact());  // Adds impact to trauma manager
-            shotTimer += fireDelay;                         // Add delay for next shot
+            Bullet b = screen.bulletPool.obtain();                              // Obtain a bullet from pool, or creates one if a free bullet is unavailable
+            b.init(body.getPosition().x, body.getPosition().y, true);   // Initializes bullet
+            screen.bullets.add(b);                                              // Adds bullet to list of active bullets
+            screen.tManager.addTrauma(b.info.impact);                           // Adds impact to trauma manager
+            shotTimer += fireDelay;                                             // Add delay for next shot
         }
     }
 
+    /** Helper method that ensures player body stays within screen. */
     private void stayInBounds() {
         // Stay within X bounds
         if (body.getPosition().x + sprite.getWidth() * sprite.getScaleX() / 2 > JuicyShmup.GAME_WIDTH * PPM)

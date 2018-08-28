@@ -7,6 +7,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.lionisaqt.screens.MainMenu;
 import io.github.lionisaqt.utils.Assets;
 
+/** The main game class.
+ * @author Ryan Shee */
 public class JuicyShmup extends Game {
 	public static final float GAME_HEIGHT = 1080;
 	public static final float GAME_WIDTH = GAME_HEIGHT * 9/16f;

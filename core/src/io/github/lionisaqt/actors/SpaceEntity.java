@@ -6,30 +6,46 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.MassData;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
 import io.github.lionisaqt.screens.InGame;
 import io.github.lionisaqt.utils.EntityInfo;
 
+/**
+ * Abstract class for generic space objects.
+ * @author Ryan Shee */
 abstract class SpaceEntity {
     private World world;
 
+    /* Reference for in-game stuff */
     InGame screen;
+
+    /* Physics body */
     Body body;
+
+    /* Rendered image */
     Sprite sprite;
-    float scale, impact;
-    short hp, maxHp, dmg, speed;
-    boolean friendly, isPlayer;
+
+    /* Used to convert sprite pixels to box2d meters */
+    float scale;
+
+    /* The object with the entity's information to be passed into the body's user data */
     EntityInfo info;
 
+    /** Constructs a space entity.
+     * @param screen Reference for in-game stuff */
     SpaceEntity(InGame screen) {
         this.screen = screen;
-        world = screen.getWorld();
+        world = screen.world;
         info = new EntityInfo();
     }
 
+    /**
+     * Makes the entire body of the entity, along with its fixtures.
+     * @param x The initial x position of the body
+     * @param y The initial y position of the body
+     * @param s The shape of the body. So far it's just "circle" or "square". */
     void makeBody(float x, float y, String s) {
         BodyDef bDef = new BodyDef();
         bDef.position.set(x, y);
@@ -57,26 +73,16 @@ abstract class SpaceEntity {
         }
     }
 
-    public void update(float deltaTime) { updateValues(); }
+    /**
+     * Called every frame. Handles any logic with the entity.
+     * @param deltaTime Time since last frame was called. */
+    public abstract void update(float deltaTime);
 
+    /** Draws the entity.
+     * @param batch The SpriteBatch for batch drawing. */
     public void draw(SpriteBatch batch) { sprite.draw(batch); }
 
-    void setAll() {
-        info.hp = hp;
-        info.dmg = dmg;
-        info.speed = speed;
-        info.impact = impact;
-        info.friendly = friendly;
-        info.isPlayer = isPlayer;
-    }
-
-    private void updateValues() {
-        hp = info.hp;
-        dmg = info.dmg;
-        speed = info.speed;
-        impact = info.impact;
-        friendly = info.friendly;
-    }
-
+    /**
+     * Disposes any disposable object here. */
     public void dispose() { sprite.getTexture().dispose(); }
 }

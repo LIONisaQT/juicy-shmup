@@ -6,10 +6,12 @@
 
 Juicy Shmup is, at its core, a top-down shoot 'em up. Taking inspiration from [Juicy Breakout](http://grapefrukt.com/f/games/juicy-breakout/), I wanted to build a simple game that felt satisfying to play. That means crisp sounds, particle effects, screen shake, and all that good stuff--all while keeping the core loop the same.
 
-## Key Features
+## Key Features (or at least, stuff I want to implement soon)
 
-* Satisfying camera shake
-* Tons of particle effects combined with Box2DLights
+* Satisfying camera shake, juiced by math
+* Tons of particle effects, combined with Box2DLights
+* Scaling difficulty from score delta and raw score
+* A ton of weapons!
 
 #### _Pictures and gifs incoming!_
 

@@ -1,4 +1,8 @@
-# Juicy Shmup
+<h1 align="center">
+  Juicy Shmup
+</h1>
+
+<h4 align="center"><i>A juicy shoot 'em up but with <a href="https://libgdx.badlogicgames.com/">libGDX</a></i>.</h4>
 
 ### _A juicy shoot 'em up_.
 

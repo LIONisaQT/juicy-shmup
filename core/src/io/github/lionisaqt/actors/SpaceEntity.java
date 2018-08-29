@@ -1,5 +1,7 @@
 package io.github.lionisaqt.actors;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -7,8 +9,10 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.Shape;
 import com.badlogic.gdx.physics.box2d.World;
 
+import box2dLight.PointLight;
 import io.github.lionisaqt.screens.InGame;
 import io.github.lionisaqt.utils.EntityInfo;
 
@@ -33,6 +37,12 @@ abstract class SpaceEntity {
     /* The object with the entity's information to be passed into the body's user data */
     EntityInfo info;
 
+    /* Light emitted by this entity */
+    PointLight light;
+
+    /* Light color to help tell friendly from non-friendly */
+    Color color;
+
     /** Constructs a space entity.
      * @param screen Reference for in-game stuff */
     SpaceEntity(InGame screen) {
@@ -53,36 +63,39 @@ abstract class SpaceEntity {
         body = world.createBody(bDef);
 
         FixtureDef fDef = new FixtureDef();
+        Shape shape;
+
         switch (s) {
             case "circle":
-                CircleShape shape = new CircleShape();
+                shape = new CircleShape();
                 shape.setRadius(sprite.getWidth() * sprite.getScaleX() * 2);
-                fDef.shape = shape;
                 fDef.isSensor = true;
-                body.createFixture(fDef);
-                shape.dispose();
                 break;
             case "square":
             default:
-                PolygonShape square = new PolygonShape();
-                square.setAsBox(sprite.getWidth() * scale / 2, sprite.getHeight() * scale / 2);
-                fDef.shape = square;
-                body.createFixture(fDef);
-                square.dispose();
+                shape = new PolygonShape();
+                ((PolygonShape)shape).setAsBox(sprite.getWidth() * scale / 2, sprite.getHeight() * scale / 2);
                 break;
         }
+
+        fDef.shape = shape;
+        body.createFixture(fDef);
+        shape.dispose();
     }
 
     /**
      * Called every frame. Handles any logic with the entity.
-     * @param deltaTime Time since last frame was called. */
+     * @param deltaTime Time since last frame was called */
     public abstract void update(float deltaTime);
+
+    /** Some things may do things other things when they die.
+     * @param deltaTime Time since last frame was called */
+    public void die(float deltaTime) {
+        screen.world.destroyBody(body);
+        screen.tManager.addTrauma(info.impact);
+    }
 
     /** Draws the entity.
      * @param batch The SpriteBatch for batch drawing. */
     public void draw(SpriteBatch batch) { sprite.draw(batch); }
-
-    /**
-     * Disposes any disposable object here. */
-    public void dispose() { sprite.getTexture().dispose(); }
 }

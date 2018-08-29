@@ -1,8 +1,8 @@
 package io.github.lionisaqt.actors;
 
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.utils.Pool.Poolable;
 
 import box2dLight.PointLight;
@@ -17,23 +17,18 @@ public class Bullet extends SpaceEntity implements Poolable {
     /* Reference to the game for assets */
     private JuicyShmup game;
 
-    /* Light emitted by this bullet */
-    private PointLight bLight;
-
-    /* Light color to help tell friendly from non-friendly */
-    private Color bColor;
-
     /** Constructs a new bullet.
      * @param game Reference to the game for assets
      * @param screen Reference for in-game stuff */
     public Bullet(JuicyShmup game, InGame screen) {
         super(screen);
         this.game = game;
+        scale = 0.1f * PPM;
         info.maxHp = 1;
         info.hp = info.maxHp;
         info.dmg = 10;
         info.speed = 25;
-        info.impact = 0.1f;
+        info.impact = 0.05f;
         info.isPlayer = false;
     }
 
@@ -44,7 +39,7 @@ public class Bullet extends SpaceEntity implements Poolable {
     public void init(float x, float y, boolean friendly) {
         if (sprite == null) {
             sprite = new Sprite(game.assets.manager.get(game.assets.bullet));
-            sprite.setScale(0.1f * PPM);
+            sprite.setScale(scale);
         }
 
         if (body == null) {
@@ -55,16 +50,16 @@ public class Bullet extends SpaceEntity implements Poolable {
             body.setLinearVelocity(0, friendly ? info.speed : -info.speed);
         }
 
-        if (bColor == null)
-            bColor = new Color(friendly ? 0 : 1, friendly ? 1 : 0, 0, 1);
+        if (color == null)
+            color = new Color(friendly ? 0 : 1, friendly ? 1 : 0, 0, 1);
         else
-            bColor.set(friendly ? 0 : 1, friendly ? 1 : 0, 0, 1);
+            color.set(friendly ? 0 : 1, friendly ? 1 : 0, 0, 1);
 
-        if (bLight == null) {
-            bLight = new PointLight(screen.rayHandler, 128, bColor, 50 * PPM, body.getPosition().x, body.getPosition().y);
-            bLight.setStaticLight(false);
-            bLight.setSoft(true);
-            bLight.attachToBody(body);
+        if (light == null) {
+            light = new PointLight(screen.rayHandler, 128, color, 50 * PPM, body.getPosition().x, body.getPosition().y);
+            light.setStaticLight(false);
+            light.setSoft(true);
+            light.attachToBody(body);
         }
 
         // TODO: Play sound here
@@ -72,16 +67,25 @@ public class Bullet extends SpaceEntity implements Poolable {
 
     @Override
     public void update(float deltaTime) {
+        if (info.hp <= 0) {
+            die(deltaTime);
+            return;
+        }
+
         sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
 
-        /* Kills bullet and snuffs its light */
-        if (info.hp <= 0 || body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT  * PPM) {
-            bLight.setActive(false);
-            free();
-        }
+        /* Destroys bullet if offscreen */
+        if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT  * PPM) free();
+}
+
+    @Override
+    public void die(float deltaTime) {
+        super.die(deltaTime);
+        free();
     }
 
-    /** Removes bullet from the active array of bullets and frees it from the pool. */
+    /** Removes bullet from the active array of bullets and frees it from the pool. Sends body to
+     * the array of dead bodies for processing. */
     public void free() {
         screen.bullets.removeValue(this, false);
         screen.bulletPool.free(this);
@@ -89,19 +93,11 @@ public class Bullet extends SpaceEntity implements Poolable {
 
     @Override
     public void reset() {
-        /* Destroys the body, otherwise physics would still be calculating for this object */
-        for (Fixture f : body.getFixtureList()) body.destroyFixture(f);
-
+        light.remove(true);
+        light = null;
+        color = null;
         body = null;
         sprite = null;
-        bColor = null;
-        bLight = null;
         info.hp = info.maxHp;
-    }
-
-    /** Disposes all disposable values. */
-    public void dispose() {
-        super.dispose();
-        bLight.dispose();
     }
 }

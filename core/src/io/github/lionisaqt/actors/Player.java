@@ -2,8 +2,10 @@ package io.github.lionisaqt.actors;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 
+import box2dLight.PointLight;
 import io.github.lionisaqt.JuicyShmup;
 import io.github.lionisaqt.screens.InGame;
 
@@ -23,7 +25,7 @@ public class Player extends SpaceEntity {
     public Player(JuicyShmup game, InGame screen, float x, float y) {
         super(screen);
         scale = 0.25f * PPM;
-        fireDelay = 0.1f;
+        fireDelay = 0.075f;
         info.maxHp = 500;
         info.hp = info.maxHp;
         info.dmg = 100;
@@ -36,13 +38,34 @@ public class Player extends SpaceEntity {
             sprite.setScale(scale);
         }
 
-        makeBody(x, y, "square");
-        body.setUserData(info);
-        sprite.setPosition(body.getPosition().x, body.getPosition().y);
+        if (body == null) {
+            makeBody(x, y, "square");
+            body.setUserData(info);
+            sprite.setPosition(body.getPosition().x, body.getPosition().y);
+        }
+
+        if (color == null)
+            color = new Color(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
+        else
+            color.set(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
+
+        if (light == null) {
+            light = new PointLight(screen.rayHandler, 128, color, 150 * PPM, body.getPosition().x, body.getPosition().y);
+            light.setStaticLight(false);
+            light.setSoft(true);
+            light.setPosition(body.getPosition().x, body.getPosition().y - 1);
+        }
     }
 
     @Override
     public void update(float deltaTime) {
+        if (info.hp <= 0) {
+            die(deltaTime);
+            return;
+        }
+
+        light.setPosition(body.getPosition().x, body.getPosition().y - 1.1f);
+
         handleInput(deltaTime);
     }
 
@@ -55,20 +78,9 @@ public class Player extends SpaceEntity {
         switch (Gdx.app.getType()) {
             case Android:
             case iOS:
-//                TODO: Figure out on-screen controller for more precise movement
-//                if (Gdx.input.isTouched()) {
-//                    if (Gdx.input.getX() < Gdx.graphics.getWidth() / 2)
-//                        xSpeed = -turnSpeedKey;
-//                    if (Gdx.input.getX() > Gdx.graphics.getWidth() / 2)
-//                        xSpeed = turnSpeedKey;
-//                }
-
-                if (Gdx.input.isTouched()) { shoot(deltaTime); }
-
-                // Accelerometer movement
                 xSpeed = Gdx.input.getAccelerometerX() * -info.speed;
-                ySpeed = Gdx.input.getAccelerometerY() * info.speed;
-
+                ySpeed = Gdx.input.getAccelerometerY() * -info.speed;
+                if (Gdx.input.isTouched()) { shoot(deltaTime); }
                 break;
             case Desktop:
                 if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
@@ -84,6 +96,10 @@ public class Player extends SpaceEntity {
             default:
                 break;
         }
+
+        /* Caps speed */
+        if (Math.abs(xSpeed) > info.speed) xSpeed = (xSpeed / Math.abs(xSpeed)) * info.speed;
+        if (Math.abs(ySpeed) > info.speed) ySpeed = (ySpeed / Math.abs(ySpeed)) * info.speed;
 
         body.setLinearVelocity(xSpeed, ySpeed);
         sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);

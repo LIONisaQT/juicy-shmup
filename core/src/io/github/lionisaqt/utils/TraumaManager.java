@@ -75,7 +75,7 @@ public class TraumaManager {
 
     /** Linearly decreases trauma over time.
      * @param deltaTime Time since last frame was called */
-    public void decreaseTrauma(float deltaTime) { setTrauma(trauma -= deltaTime * 2); }
+    public void decreaseTrauma(float deltaTime) { setTrauma(trauma -= deltaTime); }
 
     public final float getMaxAngle() { return maxAngle; }
     public final float getMaxOffset() { return maxOffset; }

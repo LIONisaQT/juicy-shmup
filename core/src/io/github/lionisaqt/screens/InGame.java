@@ -115,6 +115,7 @@ public class InGame extends MyScreen {
     @Override
     void update(float deltaTime) {
         world.step(1/60f, 6, 2);
+
         player.update(deltaTime);
         for (Bullet b : bullets) b.update(deltaTime);
         for (Enemy e : enemies) e.update(deltaTime);

@@ -1,12 +1,13 @@
 package io.github.lionisaqt.actors;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.utils.Pool.Poolable;
 
 import java.util.Random;
 
+import box2dLight.PointLight;
 import io.github.lionisaqt.JuicyShmup;
 import io.github.lionisaqt.screens.InGame;
 
@@ -47,33 +48,53 @@ public class Enemy extends SpaceEntity implements Poolable {
             body.setLinearVelocity(0, info.speed);
             sprite.setPosition(body.getPosition().x, body.getPosition().y);
         }
+
+        if (color == null)
+            color = new Color(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
+        else
+            color.set(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
+
+        if (light == null) {
+            light = new PointLight(screen.rayHandler, 128, color, 150 * PPM, body.getPosition().x, body.getPosition().y);
+            light.setStaticLight(false);
+            light.setSoft(true);
+            light.setPosition(body.getPosition().x, body.getPosition().y + 1.1f);
+        }
     }
 
     @Override
     public void update(float deltaTime) {
+        if (info.hp <= 0) {
+            die(deltaTime);
+            return;
+        }
+
         sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
+        light.setPosition(body.getPosition().x, body.getPosition().y + 1);
 
         /* Checks to make sure body speed is constant */
-        if (body.getLinearVelocity().y != info.speed) {
+        if (body.getLinearVelocity().y != info.speed)
             body.setLinearVelocity(body.getLinearVelocity().x, info.speed);
-        }
 
         /* Kills enemy if offscreen */
-        if (body.getPosition().y - sprite.getHeight() * sprite.getScaleY() / 2 < 0) free();
-
-        /* Enemy dies from causes. Rewards player with particle effects and camera shake. */
-        if (info.hp <= 0) {
-            screen.tManager.addTrauma(info.impact);
-            PooledEffect p = screen.effectPool.obtain();
-            p.setPosition(body.getPosition().x, body.getPosition().y);
-            p.scaleEffect(scale * info.maxHp / 10);
-            p.start();
-            screen.effects.add(p);
-            free();
-        }
+        if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 < 0) free();
     }
 
-    /** Removes enemy from the active array of enemies and frees it from the pool. */
+    @Override
+    public void die(float deltaTime) {
+        super.die(deltaTime);
+
+        PooledEffect p = screen.effectPool.obtain();
+        p.setPosition(body.getPosition().x, body.getPosition().y);
+        p.scaleEffect(scale * info.maxHp / 10);
+        p.start();
+        screen.effects.add(p);
+
+        free();
+    }
+
+    /** Removes enemy from the active array of enemies and frees it from the pool. Sends body to the
+     * array of dead bodies for processing. */
     public void free() {
         screen.enemies.removeValue(this, false);
         screen.enemyPool.free(this);
@@ -81,9 +102,9 @@ public class Enemy extends SpaceEntity implements Poolable {
 
     @Override
     public void reset() {
-        /* Destroys the body, otherwise physics would still be calculating for this object */
-        for (Fixture f : body.getFixtureList()) body.destroyFixture(f);
-
+        light.remove(true);
+        light = null;
+        color = null;
         body = null;
         sprite = null;
         info.hp = info.maxHp;

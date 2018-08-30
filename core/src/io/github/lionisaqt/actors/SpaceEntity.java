@@ -19,8 +19,8 @@ import io.github.lionisaqt.utils.EntityInfo;
 /**
  * Abstract class for generic space objects.
  * @author Ryan Shee */
-abstract class SpaceEntity {
-    private World world;
+abstract class SpaceEntity extends Sprite {
+    World world;
 
     /* Reference for in-game stuff */
     InGame screen;

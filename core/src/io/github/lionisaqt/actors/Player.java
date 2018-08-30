@@ -3,7 +3,14 @@ package io.github.lionisaqt.actors;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.utils.Array;
+
+import java.util.Random;
 
 import box2dLight.PointLight;
 import io.github.lionisaqt.JuicyShmup;
@@ -16,6 +23,21 @@ import static io.github.lionisaqt.JuicyShmup.PPM;
 public class Player extends SpaceEntity {
     /* The time since the last shot and how long the delay between shots are */
     private float shotTimer, fireDelay;
+
+    /* The muzzle flash animation */
+    private Animation<TextureRegion> shoot;
+
+    /* The time between animation frames */
+    private float stateTimer;
+
+    /* Left and right muzzle flashes */
+    private Sprite flashLeft, flashRight;
+
+    /* Controls when the muzzle flash plays */
+    private boolean isShooting;
+
+    /* Muzzle flash lights */
+    private PointLight muzzleLightLeft, muzzleLightRight;
 
     /** Constructs a new player at the given coordinates.
      * @param game Reference to the game for assets
@@ -55,6 +77,32 @@ public class Player extends SpaceEntity {
             light.setSoft(true);
             light.setPosition(body.getPosition().x, body.getPosition().y - 1);
         }
+
+        TextureRegion flashAnim = new TextureRegion(game.assets.manager.get(game.assets.flash), 0, 0, 32, 32);
+        Array<TextureRegion> frames = new Array<>();
+        for (int i = 0; i < 6; i++)
+            frames.add(new TextureRegion(game.assets.manager.get(game.assets.flash), i * 32, 0, 32, 32));
+        shoot = new Animation<>(0.01f, frames, Animation.PlayMode.LOOP);
+        frames.clear();
+        stateTimer = 0;
+
+        flashLeft = new Sprite();
+        flashLeft.setBounds(0, 0, 32 * PPM, 32 * PPM);
+        flashLeft.setRegion(flashAnim);
+        flashLeft.setScale(2, 1);
+
+        flashRight = new Sprite();
+        flashRight.setBounds(0, 0, 32 * PPM, 32 * PPM);
+        flashRight.setRegion(flashAnim);
+        flashRight.setScale(flashLeft.getScaleX(), flashLeft.getScaleY());
+
+        muzzleLightLeft = new PointLight(screen.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
+        muzzleLightLeft.setStaticLight(false);
+        muzzleLightLeft.setSoft(true);
+
+        muzzleLightRight = new PointLight(screen.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
+        muzzleLightRight.setStaticLight(false);
+        muzzleLightRight.setSoft(true);
     }
 
     @Override
@@ -64,9 +112,26 @@ public class Player extends SpaceEntity {
             return;
         }
 
-        light.setPosition(body.getPosition().x, body.getPosition().y - 1.1f);
-
         handleInput(deltaTime);
+
+        /* Turn off muzzle flashes */
+        if (muzzleLightLeft.isActive()) muzzleLightLeft.setActive(false);
+        if (muzzleLightRight.isActive()) muzzleLightRight.setActive(false);
+
+        /* Except when shooting */
+        if (isShooting) {
+            Random rng = new Random();
+            muzzleLightLeft.setActive(rng.nextBoolean());
+            muzzleLightRight.setActive(rng.nextBoolean());
+            flashRight.flip(true, false);
+        }
+
+        /* Engine particle effects! */
+        PooledEffect p = screen.enginePool.obtain();
+        p.setPosition(body.getPosition().x, body.getPosition().y - 1);
+        p.scaleEffect(scale);
+        p.start();
+        screen.effects.add(p);
     }
 
     /** Handles input and sets velocity accordingly, and makes sprite follow body.
@@ -80,19 +145,16 @@ public class Player extends SpaceEntity {
             case iOS:
                 xSpeed = Gdx.input.getAccelerometerX() * -info.speed;
                 ySpeed = Gdx.input.getAccelerometerY() * -info.speed;
-                if (Gdx.input.isTouched()) { shoot(deltaTime); }
+                if (Gdx.input.isTouched()) shoot(deltaTime);
+                else isShooting = false;
                 break;
             case Desktop:
-                if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-                    xSpeed += -info.speed;
-                if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-                    xSpeed += info.speed;
-                if (Gdx.input.isKeyPressed(Input.Keys.UP))
-                    ySpeed += info.speed;
-                if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-                    ySpeed += -info.speed;
-                if (Gdx.input.isKeyPressed(Input.Keys.SPACE))
-                    shoot(deltaTime);
+                if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) xSpeed += -info.speed;
+                if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) xSpeed += info.speed;
+                if (Gdx.input.isKeyPressed(Input.Keys.UP)) ySpeed += info.speed;
+                if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) ySpeed += -info.speed;
+                if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) shoot(deltaTime);
+                else isShooting = false;
             default:
                 break;
         }
@@ -102,20 +164,49 @@ public class Player extends SpaceEntity {
         if (Math.abs(ySpeed) > info.speed) ySpeed = (ySpeed / Math.abs(ySpeed)) * info.speed;
 
         body.setLinearVelocity(xSpeed, ySpeed);
+
+        light.setPosition(body.getPosition().x, body.getPosition().y - 1.1f);
+        muzzleLightLeft.setPosition(body.getPosition().x - 1.25f, body.getPosition().y + 1);
+        muzzleLightRight.setPosition(body.getPosition().x + 1.25f, body.getPosition().y + 1);
+
         sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
+        flashLeft.setPosition(body.getPosition().x - 2, body.getPosition().y + 0.25f);
+        flashRight.setPosition(body.getPosition().x, body.getPosition().y + 0.25f);
+
         stayInBounds();
     }
 
     /** Fires a bullet, obtained from the pool. Adds trauma.
      * @param deltaTime Time since last frame was called */
     private void shoot(float deltaTime) {
+        isShooting = true;
         shotTimer -= deltaTime; // Run timer between shots
+
+        /* Play animation based on time */
+        flashLeft.setRegion(shoot.getKeyFrame(stateTimer));
+        flashRight.setRegion(shoot.getKeyFrame(stateTimer));
+
         if (shotTimer <= 0) {
+            PooledEffect p = screen.shotPool.obtain();
+            p.setPosition(body.getPosition().x, body.getPosition().y + 1);
+            p.scaleEffect(scale);
+            p.start();
+            screen.effects.add(p);
+
             Bullet b = screen.bulletPool.obtain();                              // Obtain a bullet from pool, or creates one if a free bullet is unavailable
             b.init(body.getPosition().x, body.getPosition().y, true);   // Initializes bullet
             screen.bullets.add(b);                                              // Adds bullet to list of active bullets
             screen.tManager.addTrauma(b.info.impact);                           // Adds impact to trauma manager
             shotTimer += fireDelay;                                             // Add delay for next shot
+            stateTimer += deltaTime;                                            // Adds time to animation timer
+        }
+    }
+
+    public void draw(SpriteBatch batch) {
+        super.draw(batch);
+        if (isShooting) {
+            flashLeft.draw(batch);
+            flashRight.draw(batch);
         }
     }
 

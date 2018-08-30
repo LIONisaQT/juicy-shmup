@@ -2,6 +2,7 @@ package io.github.lionisaqt.actors;
 
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.utils.Pool.Poolable;
 
@@ -73,6 +74,11 @@ public class Bullet extends SpaceEntity implements Poolable {
         }
 
         sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
+        ParticleEffectPool.PooledEffect p = screen.tracersPool.obtain();
+        p.setPosition(body.getPosition().x, body.getPosition().y + 1);
+        p.scaleEffect(scale * 2.5f);
+        p.start();
+        screen.effects.add(p);
 
         /* Destroys bullet if offscreen */
         if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT  * PPM) free();

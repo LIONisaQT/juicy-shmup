@@ -33,6 +33,21 @@ public class InGame extends MyScreen {
     public ParticleEffectPool effectPool;   // Pool of effects
     public Array<PooledEffect> effects;     // Array of active effects
 
+    /* Enemy explosion effect */
+    public ParticleEffectPool enemyDeathPool;
+
+    /* Player shooting effect */
+    public ParticleEffectPool shotPool;
+
+    /* Player's engine effect */
+    public ParticleEffectPool enginePool;
+
+    /* Enemy's engine effect */
+    public ParticleEffectPool enemyEnginePool;
+
+    /* Tracers from player bullet */
+    public ParticleEffectPool tracersPool;
+
     public World world;                     // Box2d world
     private Box2DDebugRenderer b2dr;        // Lets us see box2d bodies
     public RayHandler rayHandler;           // Manages lights
@@ -59,6 +74,26 @@ public class InGame extends MyScreen {
         ParticleEffect explosion = new ParticleEffect();
         explosion.load(Gdx.files.internal("effects/explosion.p"), Gdx.files.internal("effects/"));
         effectPool = new ParticleEffectPool(explosion, 1, 100);
+
+        ParticleEffect eDeath = new ParticleEffect();
+        eDeath.load(Gdx.files.internal("effects/enemy_death.p"), Gdx.files.internal("effects/"));
+        enemyDeathPool = new ParticleEffectPool(eDeath, 1, 100);
+
+        ParticleEffect pShoot = new ParticleEffect();
+        pShoot.load(Gdx.files.internal("effects/muzzle_flash.p"), Gdx.files.internal("effects/"));
+        shotPool = new ParticleEffectPool(pShoot, 1, 100);
+
+        ParticleEffect engine = new ParticleEffect();
+        engine.load(Gdx.files.internal("effects/engine.p"), Gdx.files.internal("effects/"));
+        enginePool = new ParticleEffectPool(engine, 1, 100);
+
+        ParticleEffect eEngine = new ParticleEffect();
+        eEngine.load(Gdx.files.internal("effects/enemy_engine.p"), Gdx.files.internal("effects/"));
+        enemyEnginePool = new ParticleEffectPool(eEngine, 1, 100);
+
+        ParticleEffect tracer = new ParticleEffect();
+        tracer.load(Gdx.files.internal("effects/tracer.p"), Gdx.files.internal("effects/"));
+        tracersPool = new ParticleEffectPool(tracer, 1, 100);
 
         tManager = new TraumaManager(camera);
 
@@ -168,6 +203,7 @@ public class InGame extends MyScreen {
             enemies.get(i).free();  // Frees all enemies back to pool
         enemies.clear();            // Clears current enemies array
 
+        rayHandler.removeAll();
         rayHandler.dispose();
     }
 }

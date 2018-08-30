@@ -55,7 +55,7 @@ public class Enemy extends SpaceEntity implements Poolable {
             color.set(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
 
         if (light == null) {
-            light = new PointLight(screen.rayHandler, 128, color, 150 * PPM, body.getPosition().x, body.getPosition().y);
+            light = new PointLight(screen.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
             light.setStaticLight(false);
             light.setSoft(true);
             light.setPosition(body.getPosition().x, body.getPosition().y + 1.1f);
@@ -72,6 +72,13 @@ public class Enemy extends SpaceEntity implements Poolable {
         sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
         light.setPosition(body.getPosition().x, body.getPosition().y + 1);
 
+        /* Engine particle effects! */
+        PooledEffect p = screen.enemyEnginePool.obtain();
+        p.setPosition(body.getPosition().x, body.getPosition().y + 1);
+        p.scaleEffect(scale);
+        p.start();
+        screen.effects.add(p);
+
         /* Checks to make sure body speed is constant */
         if (body.getLinearVelocity().y != info.speed)
             body.setLinearVelocity(body.getLinearVelocity().x, info.speed);
@@ -84,9 +91,9 @@ public class Enemy extends SpaceEntity implements Poolable {
     public void die(float deltaTime) {
         super.die(deltaTime);
 
-        PooledEffect p = screen.effectPool.obtain();
+        PooledEffect p = screen.enemyDeathPool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y);
-        p.scaleEffect(scale * info.maxHp / 10);
+        p.scaleEffect(scale * info.maxHp * PPM * 2);
         p.start();
         screen.effects.add(p);
 

@@ -21,14 +21,13 @@ import static io.github.lionisaqt.JuicyShmup.PPM;
 /** The player Object.
 * @author Ryan Shee */
 public class Player extends SpaceEntity {
-    /* The time since the last shot and how long the delay between shots are */
-    private float shotTimer, fireDelay;
+    private float
+            shotTimer,  // Time since last shot
+            fireDelay,  // How long the delay between shots are
+            stateTimer; // Time between animation frames
 
     /* The muzzle flash animation */
     private Animation<TextureRegion> shoot;
-
-    /* The time between animation frames */
-    private float stateTimer;
 
     /* Left and right muzzle flashes */
     private Sprite flashLeft, flashRight;
@@ -47,37 +46,34 @@ public class Player extends SpaceEntity {
     public Player(JuicyShmup game, InGame screen, float x, float y) {
         super(screen);
         scale = 0.25f * PPM;
-        fireDelay = 0.075f;
+        fireDelay = 0.1f;
         info.maxHp = 500;
         info.hp = info.maxHp;
         info.dmg = 100;
-        info.speed = 10;
+        info.speed = 15;
         info.impact = 0f;
         info.friendly = true;
 
-        if (sprite == null) {
-            sprite = new Sprite(game.assets.manager.get(game.assets.ship));
-            sprite.setScale(scale);
-        }
+        sprite = new Sprite(game.assets.manager.get(game.assets.ship));
+        sprite.setScale(scale);
 
-        if (body == null) {
-            makeBody(x, y, "square");
-            body.setUserData(info);
-            sprite.setPosition(body.getPosition().x, body.getPosition().y);
-        }
+        makeBody(x, y, "square");
+        body.setUserData(info);
+        sprite.setPosition(body.getPosition().x, body.getPosition().y);
 
-        if (color == null)
-            color = new Color(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
-        else
-            color.set(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
+        color = new Color(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
 
-        if (light == null) {
-            light = new PointLight(screen.rayHandler, 128, color, 150 * PPM, body.getPosition().x, body.getPosition().y);
-            light.setStaticLight(false);
-            light.setSoft(true);
-            light.setPosition(body.getPosition().x, body.getPosition().y - 1);
-        }
+        /* Engine light */
+        light = new PointLight(screen.rayHandler, 128, color, 150 * PPM, body.getPosition().x, body.getPosition().y);
+        light.setStaticLight(false);
+        light.setSoft(true);
+        light.setPosition(body.getPosition().x, body.getPosition().y - 1);
 
+        initializeFlash(game);
+    }
+
+    /** Initializes muzzle flash animation and lights. */
+    private void initializeFlash(JuicyShmup game) {
         TextureRegion flashAnim = new TextureRegion(game.assets.manager.get(game.assets.flash), 0, 0, 32, 32);
         Array<TextureRegion> frames = new Array<>();
         for (int i = 0; i < 6; i++)
@@ -149,6 +145,9 @@ public class Player extends SpaceEntity {
                 else isShooting = false;
                 break;
             case Desktop:
+                /* TODO: Increasing multiplier breaks Box2D world calculations (so limit this pls) */
+                if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) screen.timeMultiplier += 0.5f;
+                if (Gdx.input.isKeyJustPressed(Input.Keys.W)) screen.timeMultiplier -= 0.5f;
                 if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) xSpeed += -info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) xSpeed += info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.UP)) ySpeed += info.speed;
@@ -180,7 +179,7 @@ public class Player extends SpaceEntity {
      * @param deltaTime Time since last frame was called */
     private void shoot(float deltaTime) {
         isShooting = true;
-        shotTimer -= deltaTime; // Run timer between shots
+        shotTimer -= deltaTime / screen.timeMultiplier; // Run timer between shots
 
         /* Play animation based on time */
         flashLeft.setRegion(shoot.getKeyFrame(stateTimer));

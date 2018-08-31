@@ -30,23 +30,17 @@ import static io.github.lionisaqt.JuicyShmup.PPM;
 /** The game screen.
  * @author Ryan Shee */
 public class InGame extends MyScreen {
-    public ParticleEffectPool effectPool;   // Pool of effects
-    public Array<PooledEffect> effects;     // Array of active effects
+    /* Array of active effects */
+    public Array<PooledEffect> effects;
 
-    /* Enemy explosion effect */
-    public ParticleEffectPool enemyDeathPool;
-
-    /* Player shooting effect */
-    public ParticleEffectPool shotPool;
-
-    /* Player's engine effect */
-    public ParticleEffectPool enginePool;
-
-    /* Enemy's engine effect */
-    public ParticleEffectPool enemyEnginePool;
-
-    /* Tracers from player bullet */
-    public ParticleEffectPool tracersPool;
+    /* Particle pools  */
+    public ParticleEffectPool
+            effectPool,         // Generic explosion
+            enemyDeathPool,     // Enemy death
+            shotPool,           // Player shooting
+            enginePool,         // Player engine
+            enemyEnginePool,    // Enemy engine
+            tracersPool;        // Friendly bullet tracer
 
     public World world;                     // Box2d world
     private Box2DDebugRenderer b2dr;        // Lets us see box2d bodies
@@ -60,42 +54,20 @@ public class InGame extends MyScreen {
     public Array<Enemy> enemies;            // Array of active enemies
     public Pool<Enemy> enemyPool;           // Pool of enemies
 
+    public float timeMultiplier;
+
     private Player player;
 
     InGame(final JuicyShmup game) {
         super(game);
-
         world = new World(new Vector2(0, 0), true);
         world.setContactListener(new B2dContactListener());
         b2dr = new Box2DDebugRenderer();
         rayHandler = new RayHandler(world);
-
-        effects = new Array<>();
-        ParticleEffect explosion = new ParticleEffect();
-        explosion.load(Gdx.files.internal("effects/explosion.p"), Gdx.files.internal("effects/"));
-        effectPool = new ParticleEffectPool(explosion, 1, 100);
-
-        ParticleEffect eDeath = new ParticleEffect();
-        eDeath.load(Gdx.files.internal("effects/enemy_death.p"), Gdx.files.internal("effects/"));
-        enemyDeathPool = new ParticleEffectPool(eDeath, 1, 100);
-
-        ParticleEffect pShoot = new ParticleEffect();
-        pShoot.load(Gdx.files.internal("effects/muzzle_flash.p"), Gdx.files.internal("effects/"));
-        shotPool = new ParticleEffectPool(pShoot, 1, 100);
-
-        ParticleEffect engine = new ParticleEffect();
-        engine.load(Gdx.files.internal("effects/engine.p"), Gdx.files.internal("effects/"));
-        enginePool = new ParticleEffectPool(engine, 1, 100);
-
-        ParticleEffect eEngine = new ParticleEffect();
-        eEngine.load(Gdx.files.internal("effects/enemy_engine.p"), Gdx.files.internal("effects/"));
-        enemyEnginePool = new ParticleEffectPool(eEngine, 1, 100);
-
-        ParticleEffect tracer = new ParticleEffect();
-        tracer.load(Gdx.files.internal("effects/tracer.p"), Gdx.files.internal("effects/"));
-        tracersPool = new ParticleEffectPool(tracer, 1, 100);
-
+        loadParticles();
         tManager = new TraumaManager(camera);
+
+        player = new Player(game, this, JuicyShmup.GAME_WIDTH / 2 * PPM, 100 * PPM);
 
         final InGame iG = this;
         bullets = new Array<>();
@@ -105,8 +77,6 @@ public class InGame extends MyScreen {
                 return new Bullet(game, iG);
             }
         };
-
-        if (player == null) player = new Player(game, this, JuicyShmup.GAME_WIDTH / 2 * PPM, 100 * PPM);
 
         enemies = new Array<>();
         enemyPool = new Pool<Enemy>() {
@@ -122,6 +92,41 @@ public class InGame extends MyScreen {
         PointLight pl = new PointLight(rayHandler, 128, new Color(0.2f,1,1,1f), 300 * PPM, JuicyShmup.GAME_WIDTH / 2 * PPM, JuicyShmup.GAME_HEIGHT / 2 * PPM);
         pl.setStaticLight(false);
         pl.setSoft(true);
+
+        timeMultiplier = 2;
+    }
+
+    /** Helper function that loads all the particles and particle pools. */
+    private void loadParticles() {
+        effects = new Array<>();
+        ParticleEffect explosion = new ParticleEffect();
+        explosion.load(Gdx.files.internal("effects/explosion.p"), Gdx.files.internal("effects/"));
+        effectPool = new ParticleEffectPool(explosion, 1, 100);
+
+        /* Enemy death */
+        ParticleEffect eDeath = new ParticleEffect();
+        eDeath.load(Gdx.files.internal("effects/enemy_death.p"), Gdx.files.internal("effects/"));
+        enemyDeathPool = new ParticleEffectPool(eDeath, 1, 100);
+
+        /* Player shoot */
+        ParticleEffect pShoot = new ParticleEffect();
+        pShoot.load(Gdx.files.internal("effects/muzzle_flash.p"), Gdx.files.internal("effects/"));
+        shotPool = new ParticleEffectPool(pShoot, 1, 100);
+
+        /* Player engine */
+        ParticleEffect engine = new ParticleEffect();
+        engine.load(Gdx.files.internal("effects/engine.p"), Gdx.files.internal("effects/"));
+        enginePool = new ParticleEffectPool(engine, 1, 100);
+
+        /* Enemy engine */
+        ParticleEffect eEngine = new ParticleEffect();
+        eEngine.load(Gdx.files.internal("effects/enemy_engine.p"), Gdx.files.internal("effects/"));
+        enemyEnginePool = new ParticleEffectPool(eEngine, 1, 100);
+
+        /* Bullet tracers */
+        ParticleEffect tracer = new ParticleEffect();
+        tracer.load(Gdx.files.internal("effects/tracer.p"), Gdx.files.internal("effects/"));
+        tracersPool = new ParticleEffectPool(tracer, 1, 100);
     }
 
     @Override
@@ -149,7 +154,7 @@ public class InGame extends MyScreen {
 
     @Override
     void update(float deltaTime) {
-        world.step(1/60f, 6, 2);
+        world.step(1 / 60f / timeMultiplier, 6, 2);
 
         player.update(deltaTime);
         for (Bullet b : bullets) b.update(deltaTime);
@@ -164,7 +169,6 @@ public class InGame extends MyScreen {
             }
         }
 
-        world.step(deltaTime, 6 , 2);
         rayHandler.setCombinedMatrix(camera.combined,0,0, viewport.getScreenWidth(), viewport.getScreenHeight());
         rayHandler.update();
 

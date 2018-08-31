@@ -21,7 +21,7 @@ timeline0: 0.0
 lowMin: 0.0
 lowMax: 0.0
 highMin: 50.0
-highMax: 100.0
+highMax: 200.0
 relative: false
 scalingCount: 3
 scaling0: 1.0
@@ -106,10 +106,14 @@ lowMax: 0.0
 highMin: -1000.0
 highMax: 1000.0
 relative: false
-scalingCount: 1
+scalingCount: 3
 scaling0: 1.0
-timelineCount: 1
+scaling1: 1.0
+scaling2: 0.0
+timelineCount: 3
 timeline0: 0.0
+timeline1: 0.6232877
+timeline2: 1.0
 - Gravity - 
 active: false
 - Tint - 
@@ -125,12 +129,20 @@ lowMax: 0.0
 highMin: 1.0
 highMax: 1.0
 relative: false
-scalingCount: 2
-scaling0: 1.0
-scaling1: 1.0
-timelineCount: 2
+scalingCount: 6
+scaling0: 0.0
+scaling1: 0.07017544
+scaling2: 0.19298245
+scaling3: 0.4385965
+scaling4: 0.6666667
+scaling5: 1.0
+timelineCount: 6
 timeline0: 0.0
-timeline1: 1.0
+timeline1: 0.3219178
+timeline2: 0.5753425
+timeline3: 0.7808219
+timeline4: 0.9041096
+timeline5: 1.0
 - Options - 
 attached: false
 continuous: false

@@ -28,7 +28,7 @@ public class Bullet extends SpaceEntity implements Poolable {
         info.maxHp = 1;
         info.hp = info.maxHp;
         info.dmg = 10;
-        info.speed = 25;
+        info.speed = 50;
         info.impact = 0.05f;
         info.isPlayer = false;
     }

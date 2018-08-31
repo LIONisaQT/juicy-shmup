@@ -28,7 +28,7 @@ public class Enemy extends SpaceEntity implements Poolable {
         scale = 0.25f * PPM;
         info.maxHp = 100;
         info.hp = info.maxHp;
-        info.dmg = 25;
+        info.dmg = 100;
         info.speed = -2;
         info.impact = 1f;
         info.friendly = false;
@@ -54,6 +54,7 @@ public class Enemy extends SpaceEntity implements Poolable {
         else
             color.set(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
 
+        /* Engine light */
         if (light == null) {
             light = new PointLight(screen.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
             light.setStaticLight(false);

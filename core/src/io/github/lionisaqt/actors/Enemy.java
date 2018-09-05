@@ -90,14 +90,14 @@ public class Enemy extends SpaceEntity implements Poolable {
 
     @Override
     public void die(float deltaTime) {
-        super.die(deltaTime);
-
         PooledEffect p = screen.enemyDeathPool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y);
         p.scaleEffect(scale * info.maxHp * PPM * 2);
         p.start();
         screen.effects.add(p);
 
+        screen.setGameSpeed(5f);
+        super.die(deltaTime);
         free();
     }
 

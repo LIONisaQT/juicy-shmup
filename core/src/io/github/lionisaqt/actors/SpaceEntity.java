@@ -16,11 +16,14 @@ import box2dLight.PointLight;
 import io.github.lionisaqt.screens.InGame;
 import io.github.lionisaqt.utils.EntityInfo;
 
+import static io.github.lionisaqt.JuicyShmup.PPM;
+
 /**
  * Abstract class for generic space objects.
  * @author Ryan Shee */
 abstract class SpaceEntity extends Sprite {
-    World world;
+    /* Need world to build body */
+    private World world;
 
     /* Reference for in-game stuff */
     InGame screen;
@@ -91,7 +94,15 @@ abstract class SpaceEntity extends Sprite {
     /** Some things may do things other things when they die.
      * @param deltaTime Time since last frame was called */
     public void die(float deltaTime) {
-        screen.world.destroyBody(body);
+        /* Explosion light effect */
+        PointLight p = new PointLight(screen.rayHandler, 128, color, 1000 * info.impact * PPM, body.getPosition().x, body.getPosition().y);
+        p.setStaticLight(false);
+        p.setSoft(true);
+        screen.lightEffects.add(p);
+
+        body.setActive(false);
+        if (!body.isActive()) screen.world.destroyBody(body);
+
         screen.tManager.addTrauma(info.impact);
     }
 

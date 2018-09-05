@@ -47,7 +47,7 @@ public class Player extends SpaceEntity {
         super(screen);
         scale = 0.25f * PPM;
         fireDelay = 0.1f;
-        info.maxHp = 500;
+        info.maxHp = 5000;
         info.hp = info.maxHp;
         info.dmg = 100;
         info.speed = 15;
@@ -145,9 +145,8 @@ public class Player extends SpaceEntity {
                 else isShooting = false;
                 break;
             case Desktop:
-                /* TODO: Increasing multiplier breaks Box2D world calculations (so limit this pls) */
-                if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) screen.timeMultiplier += 0.5f;
-                if (Gdx.input.isKeyJustPressed(Input.Keys.W)) screen.timeMultiplier -= 0.5f;
+                if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) screen.decreaseGameSpeed();
+                if (Gdx.input.isKeyJustPressed(Input.Keys.W)) screen.increaseGameSpeed();
                 if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) xSpeed += -info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) xSpeed += info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.UP)) ySpeed += info.speed;

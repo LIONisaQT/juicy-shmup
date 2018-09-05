@@ -34,7 +34,7 @@ public class TraumaManager {
 
     /** Called every frame.
      * @param deltaTime Time since last frame was called */
-    public final void manageShake(float deltaTime) {
+    public final void manageShake(float deltaTime, float timeScale) {
         if (trauma > 0) {
             /* Calculates rotational shake */
             angle = maxAngle * shakeAmount() * (new Random().nextFloat() * 2 - 1);
@@ -51,7 +51,7 @@ public class TraumaManager {
                     0
             );
 
-            decreaseTrauma(deltaTime);
+            decreaseTrauma(deltaTime, timeScale);
         } else {
             /* Ensure camera gets put back into correct place */
             trauma = 0;
@@ -63,10 +63,9 @@ public class TraumaManager {
     /** Adds trauma to the shake. Capped.
      * @param t Trauma to be added */
     public final void addTrauma(float t) {
-        if (trauma <= 1) {
-            trauma += t;
-            lastTrauma = trauma;
-        }
+        trauma += t;
+        if (trauma > 1) trauma = 1;
+        lastTrauma = trauma;
     }
 
     /** Sets trauma level to exact value.
@@ -75,7 +74,7 @@ public class TraumaManager {
 
     /** Linearly decreases trauma over time.
      * @param deltaTime Time since last frame was called */
-    public void decreaseTrauma(float deltaTime) { setTrauma(trauma -= deltaTime); }
+    private void decreaseTrauma(float deltaTime, float timeScale) { setTrauma(trauma -= deltaTime / timeScale); }
 
     public final float getMaxAngle() { return maxAngle; }
     public final float getMaxOffset() { return maxOffset; }

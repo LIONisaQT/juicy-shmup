@@ -33,6 +33,9 @@ public class InGame extends MyScreen {
     /* Array of active effects */
     public Array<PooledEffect> effects;
 
+    /* Holds all light effects for dying entities */
+    public Array<PointLight> lightEffects;
+
     /* Particle pools  */
     public ParticleEffectPool
             effectPool,         // Generic explosion
@@ -93,7 +96,9 @@ public class InGame extends MyScreen {
         pl.setStaticLight(false);
         pl.setSoft(true);
 
-        timeMultiplier = 2;
+        lightEffects = new Array<>();
+
+        timeMultiplier = 1;
     }
 
     /** Helper function that loads all the particles and particle pools. */
@@ -154,7 +159,9 @@ public class InGame extends MyScreen {
 
     @Override
     void update(float deltaTime) {
-        world.step(1 / 60f / timeMultiplier, 6, 2);
+        if (timeMultiplier != 1) normalizeGameSpeed(deltaTime);
+
+        world.step(1 / (60f * timeMultiplier), 6, 2);
 
         player.update(deltaTime);
         for (Bullet b : bullets) b.update(deltaTime);
@@ -162,17 +169,23 @@ public class InGame extends MyScreen {
 
         /* Updates particle effects, and removes it from the active array when finished */
         for (ParticleEffectPool.PooledEffect p : effects) {
-            p.update(deltaTime);
+            p.update(deltaTime / timeMultiplier);
             if (p.isComplete()) {
                 p.free();
                 effects.removeValue(p, true);
             }
         }
 
+        /* Shrinks lights from enemy deaths, and removes them when they're small enough */
+        for (PointLight p : lightEffects) {
+            if (p.getDistance() > 0) p.setDistance(p.getDistance() - deltaTime * 20);
+            else p.remove(true);
+        }
+
         rayHandler.setCombinedMatrix(camera.combined,0,0, viewport.getScreenWidth(), viewport.getScreenHeight());
         rayHandler.update();
 
-        tManager.manageShake(deltaTime);
+        tManager.manageShake(deltaTime, timeMultiplier);
     }
 
     @Override
@@ -187,6 +200,33 @@ public class InGame extends MyScreen {
         batch.end();
 
         if (game.debug) b2dr.render(world, camera.combined);
+    }
+
+    /** Decreases game speed (basically slow-mo). */
+    public void decreaseGameSpeed() { if (timeMultiplier < 5) timeMultiplier += 0.5f; }
+
+    /** Increases game speed (basically fast-mo). */
+    public void increaseGameSpeed() { if (timeMultiplier > 0.5f) timeMultiplier -= 0.5f; }
+
+    /** Sets game speed to exact value. Max slow-mo of 5x and max fast-mo of 2x.
+     * @param speed The target game speed. */
+    public void setGameSpeed(float speed) {
+        timeMultiplier = speed;
+
+        /* Hard limits */
+        if (timeMultiplier > 5) timeMultiplier = 5;
+        else if (timeMultiplier < 0.5f) timeMultiplier = 0.5f;
+    }
+
+    /** Slowly normalizes game speed.
+     * TODO: Make normalization function quadratic instead of linear
+     * @param deltaTime The time since last frame was called */
+    private void normalizeGameSpeed(float deltaTime) {
+        if (timeMultiplier > 1) timeMultiplier -= deltaTime * 3;
+        else if (timeMultiplier < 1) timeMultiplier += deltaTime * 3;
+
+        /* Resets to 1 when close enough */
+        if (Math.abs(timeMultiplier - 1) < 0.1f) timeMultiplier = 1;
     }
 
     @Override

@@ -9,10 +9,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 
@@ -30,23 +32,24 @@ import static io.github.lionisaqt.JuicyShmup.PPM;
 /** The game screen.
  * @author Ryan Shee */
 public class InGame extends MyScreen {
-    /* Array of active effects */
-    public Array<PooledEffect> effects;
+    private Label scoreLabel;
+    public int score = 0;
 
-    /* Holds all light effects for dying entities */
-    public Array<PointLight> lightEffects;
+    public Array<PooledEffect> effects;     // Array of active effects
+
+    public Array<PointLight> lightEffects;  // Holds all light effects for dying entities
 
     /* Particle pools  */
     public ParticleEffectPool
-            effectPool,         // Generic explosion
-            enemyDeathPool,     // Enemy death
-            shotPool,           // Player shooting
-            enginePool,         // Player engine
-            enemyEnginePool,    // Enemy engine
-            tracersPool;        // Friendly bullet tracer
+            effectPool,                     // Generic explosion
+            enemyDeathPool,                 // Enemy death
+            shotPool,                       // Player shooting
+            enginePool,                     // Player engine
+            enemyEnginePool,                // Enemy engine
+            tracersPool;                    // Friendly bullet tracer
 
-    public World world;                     // Box2d world
-    private Box2DDebugRenderer b2dr;        // Lets us see box2d bodies
+    public World world;                     // Box2D world
+    private Box2DDebugRenderer b2dr;        // Lets us see Box2D bodies
     public RayHandler rayHandler;           // Manages lights
 
     public TraumaManager tManager;          // Screen shake utility
@@ -57,17 +60,23 @@ public class InGame extends MyScreen {
     public Array<Enemy> enemies;            // Array of active enemies
     public Pool<Enemy> enemyPool;           // Pool of enemies
 
-    public float timeMultiplier;
+    public float timeMultiplier;            // Scales game speed
 
     private Player player;
 
     InGame(final JuicyShmup game) {
         super(game);
+
+        timeMultiplier = 1;
+
         world = new World(new Vector2(0, 0), true);
         world.setContactListener(new B2dContactListener());
         b2dr = new Box2DDebugRenderer();
+
         rayHandler = new RayHandler(world);
+
         loadParticles();
+
         tManager = new TraumaManager(camera);
 
         player = new Player(game, this, JuicyShmup.GAME_WIDTH / 2 * PPM, 100 * PPM);
@@ -97,8 +106,6 @@ public class InGame extends MyScreen {
         pl.setSoft(true);
 
         lightEffects = new Array<>();
-
-        timeMultiplier = 1;
     }
 
     /** Helper function that loads all the particles and particle pools. */
@@ -136,14 +143,25 @@ public class InGame extends MyScreen {
 
     @Override
     void addUI() {
-        // Label with our screen name
-        Label label = new Label(getClass().getSimpleName(), game.skin);
+        scoreLabel = new Label("" + score, game.skin);
 
-        // Menu button
+        TextButton pause = new TextButton("||", game.skin);
+        pause.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) { return true; }
+
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                Gdx.app.log("menu button", "game paused");
+            }
+        });
+
+        /* Menu button */
         TextButton menu = new TextButton("Back to Menu", game.skin);
         menu.addListener(new InputListener() {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) { return true; }
+
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 game.setScreen(new MainMenu(game));
@@ -151,10 +169,11 @@ public class InGame extends MyScreen {
             }
         });
 
-        hud.table.top();
-        hud.table.add(label);
+        hud.table.top().left().add(pause).width(75).left();
+        hud.table.add().expandX();
+        hud.table.right().add(scoreLabel).size(2);
         hud.table.row().pad(10, 0, 0, 0); // Next table addition will be padded
-        hud.table.add(menu);
+//        hud.table.add(menu);
     }
 
     @Override
@@ -227,6 +246,12 @@ public class InGame extends MyScreen {
 
         /* Resets to 1 when close enough */
         if (Math.abs(timeMultiplier - 1) < 0.1f) timeMultiplier = 1;
+    }
+
+    /** Adds score to current score, changes text. */
+    public void addScore(int score) {
+        this.score += score;
+        scoreLabel.setText("" + this.score);
     }
 
     @Override

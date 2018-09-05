@@ -1,6 +1,5 @@
 package io.github.lionisaqt.actors;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -22,29 +21,14 @@ import static io.github.lionisaqt.JuicyShmup.PPM;
  * Abstract class for generic space objects.
  * @author Ryan Shee */
 abstract class SpaceEntity extends Sprite {
-    /* Need world to build body */
-    private World world;
-
-    /* Reference for in-game stuff */
-    InGame screen;
-
-    /* Physics body */
-    Body body;
-
-    /* Rendered image */
-    Sprite sprite;
-
-    /* Used to convert sprite pixels to box2d meters */
-    float scale;
-
-    /* The object with the entity's information to be passed into the body's user data */
-    EntityInfo info;
-
-    /* Light emitted by this entity */
-    PointLight light;
-
-    /* Light color to help tell friendly from non-friendly */
-    Color color;
+    private World world;    // Need world to build body
+    InGame screen;          // Reference for in-game stuff
+    Body body;              // Physics body
+    Sprite sprite;          // Rendered image
+    float scale;            // Used to convert pixels to box2d meters
+    EntityInfo info;        // Contains entity's information, passed into body's user data
+    PointLight light;       // Light emitted by this entity
+    Color color;            // Light color to help tell friend from foe
 
     /** Constructs a space entity.
      * @param screen Reference for in-game stuff */

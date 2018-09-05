@@ -97,6 +97,7 @@ public class Enemy extends SpaceEntity implements Poolable {
         screen.effects.add(p);
 
         screen.setGameSpeed(5f);
+        screen.addScore(info.maxHp);
         super.die(deltaTime);
         free();
     }

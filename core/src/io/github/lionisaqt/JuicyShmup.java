@@ -1,6 +1,5 @@
 package io.github.lionisaqt;
 
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -19,7 +18,7 @@ public class JuicyShmup extends Game {
 	public SpriteBatch batch;
 
 	public Skin skin;
-	public boolean debug = true;
+	public boolean debug = false;
 
 	@Override
 	public void create () {
@@ -37,9 +36,9 @@ public class JuicyShmup extends Game {
 	
 	@Override
 	public void dispose () {
+		getScreen().dispose();
 		skin.dispose();
 		batch.dispose();
 		assets.dispose();
-		getScreen().dispose();
 	}
 }

@@ -1,6 +1,7 @@
 package io.github.lionisaqt.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -38,7 +39,7 @@ public abstract class MyScreen implements Screen {
 
         hud = new HUD(game.batch);
         hud.table.setFillParent(true);
-        hud.table.setDebug(game.debug);
+        hud.stage.setDebugAll(game.debug);
 
         addUI();
     }
@@ -65,7 +66,10 @@ public abstract class MyScreen implements Screen {
 
     /** Called every frame. Handles any logic during the state.
      * @param deltaTime Time since last frame was called */
-    abstract void update(float deltaTime);
+    void update(float deltaTime) { handleInput(); }
+
+    /** Handles player input during screen. */
+    abstract void handleInput();
 
     /** Draws the screen.
      * @param batch The SpriteBatch for batch drawing */

@@ -64,7 +64,7 @@ public class Player extends SpaceEntity {
         color = new Color(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
 
         /* Engine light */
-        light = new PointLight(screen.rayHandler, 128, color, 150 * PPM, body.getPosition().x, body.getPosition().y);
+        light = new PointLight(screen.effectsManager.rayHandler, 128, color, 150 * PPM, body.getPosition().x, body.getPosition().y);
         light.setStaticLight(false);
         light.setSoft(true);
         light.setPosition(body.getPosition().x, body.getPosition().y - 1);
@@ -92,11 +92,11 @@ public class Player extends SpaceEntity {
         flashRight.setRegion(flashAnim);
         flashRight.setScale(flashLeft.getScaleX(), flashLeft.getScaleY());
 
-        muzzleLightLeft = new PointLight(screen.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
+        muzzleLightLeft = new PointLight(screen.effectsManager.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
         muzzleLightLeft.setStaticLight(false);
         muzzleLightLeft.setSoft(true);
 
-        muzzleLightRight = new PointLight(screen.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
+        muzzleLightRight = new PointLight(screen.effectsManager.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
         muzzleLightRight.setStaticLight(false);
         muzzleLightRight.setSoft(true);
     }
@@ -123,11 +123,11 @@ public class Player extends SpaceEntity {
         }
 
         /* Engine particle effects! */
-        PooledEffect p = screen.enginePool.obtain();
+        PooledEffect p = screen.effectsManager.enginePool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y - 1);
         p.scaleEffect(scale);
         p.start();
-        screen.effects.add(p);
+        screen.effectsManager.effects.add(p);
     }
 
     /** Handles input and sets velocity accordingly, and makes sprite follow body.
@@ -145,8 +145,6 @@ public class Player extends SpaceEntity {
                 else isShooting = false;
                 break;
             case Desktop:
-                if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) screen.decreaseGameSpeed();
-                if (Gdx.input.isKeyJustPressed(Input.Keys.W)) screen.increaseGameSpeed();
                 if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) xSpeed += -info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) xSpeed += info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.UP)) ySpeed += info.speed;
@@ -185,11 +183,11 @@ public class Player extends SpaceEntity {
         flashRight.setRegion(shoot.getKeyFrame(stateTimer));
 
         if (shotTimer <= 0) {
-            PooledEffect p = screen.shotPool.obtain();
+            PooledEffect p = screen.effectsManager.shotPool.obtain();
             p.setPosition(body.getPosition().x, body.getPosition().y + 1);
             p.scaleEffect(scale);
             p.start();
-            screen.effects.add(p);
+            screen.effectsManager.effects.add(p);
 
             Bullet b = screen.bulletPool.obtain();                              // Obtain a bullet from pool, or creates one if a free bullet is unavailable
             b.init(body.getPosition().x, body.getPosition().y, true);   // Initializes bullet

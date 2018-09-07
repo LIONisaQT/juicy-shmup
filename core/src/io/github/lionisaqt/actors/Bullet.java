@@ -57,7 +57,7 @@ public class Bullet extends SpaceEntity implements Poolable {
             color.set(friendly ? 0 : 1, friendly ? 1 : 0, 0, 1);
 
         if (light == null) {
-            light = new PointLight(screen.rayHandler, 128, color, 50 * PPM, body.getPosition().x, body.getPosition().y);
+            light = new PointLight(screen.effectsManager.rayHandler, 128, color, 50 * PPM, body.getPosition().x, body.getPosition().y);
             light.setStaticLight(false);
             light.setSoft(true);
             light.attachToBody(body);
@@ -74,11 +74,11 @@ public class Bullet extends SpaceEntity implements Poolable {
         }
 
         sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
-        ParticleEffectPool.PooledEffect p = screen.tracersPool.obtain();
+        ParticleEffectPool.PooledEffect p = screen.effectsManager.tracersPool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y + 1);
         p.scaleEffect(scale * 2.5f);
         p.start();
-        screen.effects.add(p);
+        screen.effectsManager.effects.add(p);
 
         /* Destroys bullet if offscreen */
         if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT  * PPM) free();

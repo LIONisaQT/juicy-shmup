@@ -79,10 +79,11 @@ abstract class SpaceEntity extends Sprite {
      * @param deltaTime Time since last frame was called */
     public void die(float deltaTime) {
         /* Explosion light effect */
-        PointLight p = new PointLight(screen.rayHandler, 128, color, 1000 * info.impact * PPM, body.getPosition().x, body.getPosition().y);
-        p.setStaticLight(false);
-        p.setSoft(true);
-        screen.lightEffects.add(p);
+        PointLight p = screen.effectsManager.lightPool.obtain();
+        p.setColor(color);
+        p.setDistance(1500 * info.impact * PPM);
+        p.setPosition(body.getPosition());
+        screen.effectsManager.lightEffects.add(p);
 
         body.setActive(false);
         if (!body.isActive()) screen.world.destroyBody(body);

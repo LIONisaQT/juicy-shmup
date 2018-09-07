@@ -1,64 +1,57 @@
 package io.github.lionisaqt.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.ParticleEffect;
-import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
-import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.utils.Timer;
 
-import box2dLight.PointLight;
-import box2dLight.RayHandler;
 import io.github.lionisaqt.JuicyShmup;
 import io.github.lionisaqt.actors.Bullet;
-import io.github.lionisaqt.actors.Enemy;
+import io.github.lionisaqt.actors.EnemyDirector;
 import io.github.lionisaqt.actors.Player;
 import io.github.lionisaqt.utils.B2dContactListener;
+import io.github.lionisaqt.utils.BackgroundColor;
+import io.github.lionisaqt.utils.EffectsManager;
 import io.github.lionisaqt.utils.TraumaManager;
 
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 import static io.github.lionisaqt.JuicyShmup.PPM;
 
 /** The game screen.
  * @author Ryan Shee */
 public class InGame extends MyScreen {
-    private Label scoreLabel;
-    public int score = 0;
+    private enum State { PAUSE, PLAY, RESUME }
+    private State state;
+    private Table pauseTable;
 
-    public Array<PooledEffect> effects;     // Array of active effects
+    private BackgroundColor backgroundColor;
+    private Label scoreLabel, pauseLabel;
+    private TextButton pauseButton, menuButton, resumeButton, exitButton;
+    private int score = 0;
 
-    public Array<PointLight> lightEffects;  // Holds all light effects for dying entities
+    public final EffectsManager effectsManager;
 
-    /* Particle pools  */
-    public ParticleEffectPool
-            effectPool,                     // Generic explosion
-            enemyDeathPool,                 // Enemy death
-            shotPool,                       // Player shooting
-            enginePool,                     // Player engine
-            enemyEnginePool,                // Enemy engine
-            tracersPool;                    // Friendly bullet tracer
+    public final World world;               // Box2D world
+    private final Box2DDebugRenderer b2dr;  // Lets us see Box2D bodies
 
-    public World world;                     // Box2D world
-    private Box2DDebugRenderer b2dr;        // Lets us see Box2D bodies
-    public RayHandler rayHandler;           // Manages lights
-
-    public TraumaManager tManager;          // Screen shake utility
+    public final TraumaManager tManager;    // Screen shake utility
 
     public Array<Bullet> bullets;           // Array of active bullets
     public Pool<Bullet> bulletPool;         // Pool of bullets
 
-    public Array<Enemy> enemies;            // Array of active enemies
-    public Pool<Enemy> enemyPool;           // Pool of enemies
+    private final EnemyDirector director;   // Controls enemy spawn
 
     public float timeMultiplier;            // Scales game speed
 
@@ -66,6 +59,7 @@ public class InGame extends MyScreen {
 
     InGame(final JuicyShmup game) {
         super(game);
+        state = State.PLAY;
 
         timeMultiplier = 1;
 
@@ -73,9 +67,9 @@ public class InGame extends MyScreen {
         world.setContactListener(new B2dContactListener());
         b2dr = new Box2DDebugRenderer();
 
-        rayHandler = new RayHandler(world);
-
-        loadParticles();
+        effectsManager = new EffectsManager();
+        effectsManager.loadParticles();
+        effectsManager.loadLightEffects(world);
 
         tManager = new TraumaManager(camera);
 
@@ -90,142 +84,75 @@ public class InGame extends MyScreen {
             }
         };
 
-        enemies = new Array<>();
-        enemyPool = new Pool<Enemy>() {
-            @Override
-            protected Enemy newObject() { return new Enemy(game, iG); }
-        };
-        for (int i = 0; i < 10; i++) {
-            Enemy e = enemyPool.obtain();
-            e.init();
-            enemies.add(e);
-        }
-
-        PointLight pl = new PointLight(rayHandler, 128, new Color(0.2f,1,1,1f), 300 * PPM, JuicyShmup.GAME_WIDTH / 2 * PPM, JuicyShmup.GAME_HEIGHT / 2 * PPM);
-        pl.setStaticLight(false);
-        pl.setSoft(true);
-
-        lightEffects = new Array<>();
+        director = new EnemyDirector(game, this);
     }
 
-    /** Helper function that loads all the particles and particle pools. */
-    private void loadParticles() {
-        effects = new Array<>();
-        ParticleEffect explosion = new ParticleEffect();
-        explosion.load(Gdx.files.internal("effects/explosion.p"), Gdx.files.internal("effects/"));
-        effectPool = new ParticleEffectPool(explosion, 1, 100);
-
-        /* Enemy death */
-        ParticleEffect eDeath = new ParticleEffect();
-        eDeath.load(Gdx.files.internal("effects/enemy_death.p"), Gdx.files.internal("effects/"));
-        enemyDeathPool = new ParticleEffectPool(eDeath, 1, 100);
-
-        /* Player shoot */
-        ParticleEffect pShoot = new ParticleEffect();
-        pShoot.load(Gdx.files.internal("effects/muzzle_flash.p"), Gdx.files.internal("effects/"));
-        shotPool = new ParticleEffectPool(pShoot, 1, 100);
-
-        /* Player engine */
-        ParticleEffect engine = new ParticleEffect();
-        engine.load(Gdx.files.internal("effects/engine.p"), Gdx.files.internal("effects/"));
-        enginePool = new ParticleEffectPool(engine, 1, 100);
-
-        /* Enemy engine */
-        ParticleEffect eEngine = new ParticleEffect();
-        eEngine.load(Gdx.files.internal("effects/enemy_engine.p"), Gdx.files.internal("effects/"));
-        enemyEnginePool = new ParticleEffectPool(eEngine, 1, 100);
-
-        /* Bullet tracers */
-        ParticleEffect tracer = new ParticleEffect();
-        tracer.load(Gdx.files.internal("effects/tracer.p"), Gdx.files.internal("effects/"));
-        tracersPool = new ParticleEffectPool(tracer, 1, 100);
-    }
-
-    @Override
-    void addUI() {
-        scoreLabel = new Label("" + score, game.skin);
-
-        TextButton pause = new TextButton("||", game.skin);
-        pause.addListener(new InputListener() {
-            @Override
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) { return true; }
-
-            @Override
-            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-                Gdx.app.log("menu button", "game paused");
-            }
-        });
-
-        /* Menu button */
-        TextButton menu = new TextButton("Back to Menu", game.skin);
-        menu.addListener(new InputListener() {
-            @Override
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) { return true; }
-
-            @Override
-            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-                game.setScreen(new MainMenu(game));
-                dispose();
-            }
-        });
-
-        hud.table.top().left().add(pause).width(75).left();
-        hud.table.add().expandX();
-        hud.table.right().add(scoreLabel).size(2);
-        hud.table.row().pad(10, 0, 0, 0); // Next table addition will be padded
-//        hud.table.add(menu);
-    }
-
-    @Override
     void update(float deltaTime) {
-        if (timeMultiplier != 1) normalizeGameSpeed(deltaTime);
+        super.update(deltaTime);
+        switch (state) {
+            case PAUSE:
+                pauseTable.setVisible(true);
+                break;
+            case RESUME:
+                pauseTable.setVisible(false);
+                timeMultiplier = 6f;
+                state = State.PLAY;
+                break;
+            case PLAY:
+                if (timeMultiplier != 1) normalizeGameSpeed(deltaTime);
 
-        world.step(1 / (60f * timeMultiplier), 6, 2);
+                world.step(1 / (60f * timeMultiplier), 6, 2);
 
-        player.update(deltaTime);
-        for (Bullet b : bullets) b.update(deltaTime);
-        for (Enemy e : enemies) e.update(deltaTime);
-
-        /* Updates particle effects, and removes it from the active array when finished */
-        for (ParticleEffectPool.PooledEffect p : effects) {
-            p.update(deltaTime / timeMultiplier);
-            if (p.isComplete()) {
-                p.free();
-                effects.removeValue(p, true);
-            }
+                player.update(deltaTime);
+                for (Bullet b : bullets) b.update(deltaTime);
+                director.update(deltaTime);
+                effectsManager.update(deltaTime, timeMultiplier, camera, viewport);
+                tManager.manageShake(deltaTime, timeMultiplier);
+                break;
+            default:
+                break;
         }
+    }
 
-        /* Shrinks lights from enemy deaths, and removes them when they're small enough */
-        for (PointLight p : lightEffects) {
-            if (p.getDistance() > 0) p.setDistance(p.getDistance() - deltaTime * 20);
-            else p.remove(true);
+    @Override
+    void handleInput() {
+        switch (Gdx.app.getType()) {
+            case Android:
+            case iOS:
+                break;
+            case Desktop:
+                if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) decreaseGameSpeed();
+                if (Gdx.input.isKeyJustPressed(Input.Keys.W)) increaseGameSpeed();
+                if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) Gdx.app.exit();
+            default:
+                break;
         }
-
-        rayHandler.setCombinedMatrix(camera.combined,0,0, viewport.getScreenWidth(), viewport.getScreenHeight());
-        rayHandler.update();
-
-        tManager.manageShake(deltaTime, timeMultiplier);
     }
 
     @Override
     void draw(SpriteBatch batch) {
-        rayHandler.render();
-
+        effectsManager.renderLight();
         batch.begin();
         player.draw(batch);
-        for (Enemy e : enemies) e.draw(batch);
         for (Bullet b : bullets) b.draw(batch);
-        for (ParticleEffectPool.PooledEffect p : effects) p.draw(batch);
+        director.draw(batch);
+        effectsManager.draw(batch);
         batch.end();
 
         if (game.debug) b2dr.render(world, camera.combined);
     }
 
     /** Decreases game speed (basically slow-mo). */
-    public void decreaseGameSpeed() { if (timeMultiplier < 5) timeMultiplier += 0.5f; }
+    private void decreaseGameSpeed() {
+        timeMultiplier += 0.5f;
+        if (timeMultiplier > 5) timeMultiplier = 5f;
+    }
 
     /** Increases game speed (basically fast-mo). */
-    public void increaseGameSpeed() { if (timeMultiplier > 0.5f) timeMultiplier -= 0.5f; }
+    private void increaseGameSpeed() {
+        timeMultiplier -= 0.5f;
+        if (timeMultiplier < 0.5f) timeMultiplier = 0.5f;
+    }
 
     /** Sets game speed to exact value. Max slow-mo of 5x and max fast-mo of 2x.
      * @param speed The target game speed. */
@@ -234,7 +161,7 @@ public class InGame extends MyScreen {
 
         /* Hard limits */
         if (timeMultiplier > 5) timeMultiplier = 5;
-        else if (timeMultiplier < 0.5f) timeMultiplier = 0.5f;
+        if (timeMultiplier < 0.5f) timeMultiplier = 0.5f;
     }
 
     /** Slowly normalizes game speed.
@@ -254,25 +181,169 @@ public class InGame extends MyScreen {
         scoreLabel.setText("" + this.score);
     }
 
+    /** Returns current score.
+     * @return score Player's current score. */
+    public int getScore() { return score; }
+
     @Override
     public void dispose() {
         super.dispose();
+        backgroundColor.dispose();
+
         world.dispose();
         b2dr.dispose();
 
-        for (int i = effects.size - 1; i >= 0; i--)
-            effects.get(i).free();  // Free all effects back to pool
-        effects.clear();            // Clear current effects array
-
         for (int i = bullets.size - 1; i >=0; i--)
-            bullets.get(i).free();  // Free all bullets back to pool
-        bullets.clear();            // Clear current bullets array
+            bullets.get(i).free();
+        bullets.clear();
 
-        for (int i = enemies.size -1 ; i >= 0; i--)
-            enemies.get(i).free();  // Frees all enemies back to pool
-        enemies.clear();            // Clears current enemies array
+        director.dispose();
+        effectsManager.dispose();
+    }
 
-        rayHandler.removeAll();
-        rayHandler.dispose();
+    @Override
+    void addUI() {
+        scoreLabel = new Label("" + score, game.skin);
+        scoreLabel.setFontScale(2f);
+
+        pauseTable = new Table();
+        pauseTable.setFillParent(true);
+        hud.stage.addActor(pauseTable);
+
+        pauseButton = new TextButton("||", game.skin);
+        pauseButton.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) { return true; }
+
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                switch (state) {
+                    case PAUSE:
+                        break;
+                    case RESUME:
+                    case PLAY:
+                    default:
+                        pauseButton.setTouchable(Touchable.disabled);
+                        pauseAnimation();
+                        state = State.PAUSE;
+                        break;
+                }
+            }
+        });
+
+        pauseLabel = new Label("Paused", game.skin, "title");
+
+        menuButton = new TextButton("Retreat", game.skin);
+        menuButton.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) { return true; }
+
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                pauseAnimationReverse();
+                float delay = 1.2f;
+                Timer.schedule(new Timer.Task() {
+                    @Override
+                    public void run() {
+                        pauseButton.setTouchable(Touchable.disabled);
+                        game.setScreen(new MainMenu(game));
+                        dispose();
+                    }
+                }, delay);
+            }
+        });
+
+        resumeButton = new TextButton("Resume", game.skin);
+        resumeButton.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) { return true; }
+
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                pauseAnimationReverse();
+                float delay = 1.2f;
+                Timer.schedule(new Timer.Task() {
+                    @Override
+                    public void run() {
+                        pauseButton.setTouchable(Touchable.enabled);
+                        state = State.RESUME;
+                    }
+                }, delay);
+            }
+        });
+
+        exitButton = new TextButton("Rage Quit", game.skin);
+        exitButton.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) { return true; }
+
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                dispose();
+                Gdx.app.exit();
+            }
+        });
+
+        hud.table.top().left().add(pauseButton).width(75).left();
+        hud.table.add().expandX();
+        hud.table.right().add(scoreLabel).top();
+
+        backgroundColor = new BackgroundColor("textures/white_color_texture.png");
+        backgroundColor.setColor(130, 0, 153, 255 / 2);
+        pauseTable.setBackground(backgroundColor);
+        pauseTable.add(pauseLabel);
+        pauseTable.row().pad(-30, 0, 0, 0);
+        pauseTable.add(menuButton).minWidth(200);
+        pauseTable.row();
+        pauseTable.add(resumeButton).fill();
+        pauseTable.setDebug(game.debug);
+        pauseTable.setVisible(false);
+    }
+
+    @Override
+    public void show() {
+        super.show();
+        scoreLabel.addAction(sequence(alpha(0),
+                parallel(fadeIn(1f), moveBy(0, -10, 1f, Interpolation.pow5))));
+        pauseButton.addAction(sequence(alpha(0),
+                parallel(fadeIn(1f), moveBy(0, -10, 1f, Interpolation.pow5))));
+    }
+
+    /** Plays pause menu animation when pause button is clicked. */
+    private void pauseAnimation() {
+        pauseLabel.addAction(sequence(alpha(0),
+                parallel(fadeIn(0.5f))));
+        menuButton.addAction(sequence(alpha(0), delay(0.1f),
+                parallel(fadeIn(2f, Interpolation.pow5), moveBy(0, -35, 1.5f, Interpolation.pow5))));
+        resumeButton.addAction(sequence(alpha(0), delay(0.2f),
+                parallel(fadeIn(2f, Interpolation.pow5), moveBy(0, -35, 1.5f, Interpolation.pow5))));
+    }
+
+    /** Reverses pause menu animation for next pause. */
+    private void pauseAnimationReverse() {
+        resumeButton.addAction(parallel(fadeOut(1f, Interpolation.pow5), moveBy(0, 35, 1.25f, Interpolation.pow5)));
+        menuButton.addAction(sequence(delay(0.1f),
+                parallel(fadeOut(1f, Interpolation.pow5), moveBy(0, 35, 1.25f, Interpolation.pow5))));
+        pauseLabel.addAction(sequence(delay(0.2f),
+                parallel(fadeOut(1f, Interpolation.pow5))));
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+    }
+
+    @Override
+    public void pause() {
+        super.pause();
+        pauseButton.setTouchable(Touchable.disabled);
+        pauseAnimation();
+        state = State.PAUSE;
+    }
+
+    @Override
+    public void hide() {
+        super.hide();
+        state = State.PAUSE;
     }
 }

@@ -85,5 +85,5 @@ public class TraumaManager {
 
     /** Scaling function for trauma.
      * @return Scaled float for camera shake amount. */
-    public final float shakeAmount() { return trauma * trauma * trauma; }
+    private float shakeAmount() { return trauma * trauma * trauma; }
 }

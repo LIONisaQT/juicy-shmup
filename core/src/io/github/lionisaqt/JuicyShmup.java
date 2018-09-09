@@ -21,7 +21,7 @@ public class JuicyShmup extends Game {
 	public boolean debug = false;
 
 	@Override
-	public void create () {
+	public void create() {
 		assets.load();
 		assets.manager.finishLoading(); // Moves on only when finished loading
         batch = new SpriteBatch();
@@ -30,12 +30,12 @@ public class JuicyShmup extends Game {
 	}
 
 	@Override
-	public void render () {
+	public void render() {
 		super.render();
 	}
 	
 	@Override
-	public void dispose () {
+	public void dispose() {
 		getScreen().dispose();
 		skin.dispose();
 		batch.dispose();

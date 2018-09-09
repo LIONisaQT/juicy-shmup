@@ -15,15 +15,11 @@ import static io.github.lionisaqt.JuicyShmup.PPM;
 /** Poolable bullet class. Can be used for both friendly and non-friendly units.
  * @author Ryan Shee */
 public class Bullet extends SpaceEntity implements Poolable {
-    /* Reference to the game for assets */
-    private JuicyShmup game;
-
     /** Constructs a new bullet.
      * @param game Reference to the game for assets
      * @param screen Reference for in-game stuff */
     public Bullet(JuicyShmup game, InGame screen) {
-        super(screen);
-        this.game = game;
+        super(game, screen);
         scale = 0.1f * PPM;
         info.maxHp = 1;
         info.hp = info.maxHp;
@@ -57,7 +53,7 @@ public class Bullet extends SpaceEntity implements Poolable {
             color.set(friendly ? 0 : 1, friendly ? 1 : 0, 0, 1);
 
         if (light == null) {
-            light = new PointLight(screen.effectsManager.rayHandler, 128, color, 50 * PPM, body.getPosition().x, body.getPosition().y);
+            light = new PointLight(screen.eManager.rayHandler, 128, color, 50 * PPM, body.getPosition().x, body.getPosition().y);
             light.setStaticLight(false);
             light.setSoft(true);
             light.attachToBody(body);
@@ -69,24 +65,24 @@ public class Bullet extends SpaceEntity implements Poolable {
     @Override
     public void update(float deltaTime) {
         if (info.hp <= 0) {
-            die(deltaTime);
+            die();
             return;
         }
 
         sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
-        ParticleEffectPool.PooledEffect p = screen.effectsManager.tracersPool.obtain();
+        ParticleEffectPool.PooledEffect p = screen.eManager.tracersPool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y + 1);
         p.scaleEffect(scale * 2.5f);
         p.start();
-        screen.effectsManager.effects.add(p);
+        screen.eManager.effects.add(p);
 
         /* Destroys bullet if offscreen */
         if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT  * PPM) free();
 }
 
     @Override
-    public void die(float deltaTime) {
-        super.die(deltaTime);
+    public void die() {
+        super.die();
         free();
     }
 

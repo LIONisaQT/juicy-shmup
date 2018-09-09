@@ -1,5 +1,6 @@
 package io.github.lionisaqt.utils;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -84,5 +85,5 @@ public class TraumaManager {
 
     /** Scaling function for trauma.
      * @return Scaled float for camera shake amount. */
-    public final float shakeAmount() { return trauma * trauma; }
+    public final float shakeAmount() { return trauma * trauma * trauma; }
 }

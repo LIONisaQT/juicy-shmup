@@ -8,6 +8,12 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 /** Listens for contact between bodies.
  * @author Ryan Shee */
 public class B2dContactListener implements ContactListener {
+    private TraumaManager manager;
+
+    public B2dContactListener(TraumaManager manager) {
+        this.manager = manager;
+    }
+
     @Override
     public void beginContact(Contact contact) {
         EntityInfo a = (EntityInfo)contact.getFixtureA().getBody().getUserData();
@@ -17,6 +23,8 @@ public class B2dContactListener implements ContactListener {
         if ((a.friendly && !b.friendly) || (!a.friendly && b.friendly)) {
             a.hp -= b.dmg;
             b.hp -= a.dmg;
+
+            if (a.isPlayer || b.isPlayer) { manager.addTrauma(a.isPlayer ? a.impact : b.impact); }
         }
     }
 

@@ -44,15 +44,16 @@ public class Player extends SpaceEntity {
      * @param x Initial x position
      * @param y Initial y position */
     public Player(JuicyShmup game, InGame screen, float x, float y) {
-        super(screen);
+        super(game, screen);
         scale = 0.25f * PPM;
         fireDelay = 0.1f;
         info.maxHp = 5000;
         info.hp = info.maxHp;
         info.dmg = 100;
         info.speed = 15;
-        info.impact = 0f;
+        info.impact = 1f;
         info.friendly = true;
+        info.isPlayer = true;
 
         sprite = new Sprite(game.assets.manager.get(game.assets.ship));
         sprite.setScale(scale);
@@ -64,47 +65,18 @@ public class Player extends SpaceEntity {
         color = new Color(info.friendly ? 0 : 1, info.friendly ? 1 : 0, 0, 1);
 
         /* Engine light */
-        light = new PointLight(screen.effectsManager.rayHandler, 128, color, 150 * PPM, body.getPosition().x, body.getPosition().y);
+        light = new PointLight(screen.eManager.rayHandler, 128, color, 150 * PPM, body.getPosition().x, body.getPosition().y);
         light.setStaticLight(false);
         light.setSoft(true);
         light.setPosition(body.getPosition().x, body.getPosition().y - 1);
 
-        initializeFlash(game);
-    }
-
-    /** Initializes muzzle flash animation and lights. */
-    private void initializeFlash(JuicyShmup game) {
-        TextureRegion flashAnim = new TextureRegion(game.assets.manager.get(game.assets.flash), 0, 0, 32, 32);
-        Array<TextureRegion> frames = new Array<>();
-        for (int i = 0; i < 6; i++)
-            frames.add(new TextureRegion(game.assets.manager.get(game.assets.flash), i * 32, 0, 32, 32));
-        shoot = new Animation<>(0.01f, frames, Animation.PlayMode.LOOP);
-        frames.clear();
-        stateTimer = 0;
-
-        flashLeft = new Sprite();
-        flashLeft.setBounds(0, 0, 32 * PPM, 32 * PPM);
-        flashLeft.setRegion(flashAnim);
-        flashLeft.setScale(2, 1);
-
-        flashRight = new Sprite();
-        flashRight.setBounds(0, 0, 32 * PPM, 32 * PPM);
-        flashRight.setRegion(flashAnim);
-        flashRight.setScale(flashLeft.getScaleX(), flashLeft.getScaleY());
-
-        muzzleLightLeft = new PointLight(screen.effectsManager.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
-        muzzleLightLeft.setStaticLight(false);
-        muzzleLightLeft.setSoft(true);
-
-        muzzleLightRight = new PointLight(screen.effectsManager.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
-        muzzleLightRight.setStaticLight(false);
-        muzzleLightRight.setSoft(true);
+        initializeFlash();
     }
 
     @Override
     public void update(float deltaTime) {
         if (info.hp <= 0) {
-            die(deltaTime);
+            die();
             return;
         }
 
@@ -123,11 +95,11 @@ public class Player extends SpaceEntity {
         }
 
         /* Engine particle effects! */
-        PooledEffect p = screen.effectsManager.enginePool.obtain();
+        PooledEffect p = screen.eManager.enginePool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y - 1);
         p.scaleEffect(scale);
         p.start();
-        screen.effectsManager.effects.add(p);
+        screen.eManager.effects.add(p);
     }
 
     /** Handles input and sets velocity accordingly, and makes sprite follow body.
@@ -173,7 +145,7 @@ public class Player extends SpaceEntity {
     }
 
     /** Fires a bullet, obtained from the pool. Adds trauma.
-     * @param deltaTime Time since last frame was called */
+     * @param deltaTime time since last frame was called */
     private void shoot(float deltaTime) {
         isShooting = true;
         shotTimer -= deltaTime / screen.timeMultiplier; // Run timer between shots
@@ -183,11 +155,11 @@ public class Player extends SpaceEntity {
         flashRight.setRegion(shoot.getKeyFrame(stateTimer));
 
         if (shotTimer <= 0) {
-            PooledEffect p = screen.effectsManager.shotPool.obtain();
+            PooledEffect p = screen.eManager.shotPool.obtain();
             p.setPosition(body.getPosition().x, body.getPosition().y + 1);
             p.scaleEffect(scale);
             p.start();
-            screen.effectsManager.effects.add(p);
+            screen.eManager.effects.add(p);
 
             Bullet b = screen.bulletPool.obtain();                              // Obtain a bullet from pool, or creates one if a free bullet is unavailable
             b.init(body.getPosition().x, body.getPosition().y, true);   // Initializes bullet
@@ -204,6 +176,34 @@ public class Player extends SpaceEntity {
             flashLeft.draw(batch);
             flashRight.draw(batch);
         }
+    }
+
+    private void initializeFlash() {
+        TextureRegion flashAnim = new TextureRegion(game.assets.manager.get(game.assets.flash), 0, 0, 32, 32);
+        Array<TextureRegion> frames = new Array<>();
+        for (int i = 0; i < 6; i++)
+            frames.add(new TextureRegion(game.assets.manager.get(game.assets.flash), i * 32, 0, 32, 32));
+        shoot = new Animation<>(0.01f, frames, Animation.PlayMode.LOOP);
+        frames.clear();
+        stateTimer = 0;
+
+        flashLeft = new Sprite();
+        flashLeft.setBounds(0, 0, 32 * PPM, 32 * PPM);
+        flashLeft.setRegion(flashAnim);
+        flashLeft.setScale(2, 1);
+
+        flashRight = new Sprite();
+        flashRight.setBounds(0, 0, 32 * PPM, 32 * PPM);
+        flashRight.setRegion(flashAnim);
+        flashRight.setScale(flashLeft.getScaleX(), flashLeft.getScaleY());
+
+        muzzleLightLeft = new PointLight(screen.eManager.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
+        muzzleLightLeft.setStaticLight(false);
+        muzzleLightLeft.setSoft(true);
+
+        muzzleLightRight = new PointLight(screen.eManager.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
+        muzzleLightRight.setStaticLight(false);
+        muzzleLightRight.setSoft(true);
     }
 
     /** Helper method that ensures player body stays within screen. */

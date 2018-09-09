@@ -39,9 +39,9 @@ public class InGame extends MyScreen {
     private BackgroundColor backgroundColor;
     private Label scoreLabel, pauseLabel;
     private TextButton pauseButton, menuButton, resumeButton, exitButton;
-    private int score = 0;
+    private int score = 20001;
 
-    public final EffectsManager effectsManager;
+    public final EffectsManager eManager;
 
     public final World world;               // Box2D world
     private final Box2DDebugRenderer b2dr;  // Lets us see Box2D bodies
@@ -63,15 +63,15 @@ public class InGame extends MyScreen {
 
         timeMultiplier = 1;
 
+        tManager = new TraumaManager(camera);
+
         world = new World(new Vector2(0, 0), true);
-        world.setContactListener(new B2dContactListener());
+        world.setContactListener(new B2dContactListener(tManager));
         b2dr = new Box2DDebugRenderer();
 
-        effectsManager = new EffectsManager();
-        effectsManager.loadParticles();
-        effectsManager.loadLightEffects(world);
-
-        tManager = new TraumaManager(camera);
+        eManager = new EffectsManager();
+        eManager.loadParticles();
+        eManager.loadLightEffects(world);
 
         player = new Player(game, this, JuicyShmup.GAME_WIDTH / 2 * PPM, 100 * PPM);
 
@@ -105,8 +105,8 @@ public class InGame extends MyScreen {
 
                 player.update(deltaTime);
                 for (Bullet b : bullets) b.update(deltaTime);
-                director.update(deltaTime);
-                effectsManager.update(deltaTime, timeMultiplier, camera, viewport);
+                director.update(deltaTime, player.body.getPosition());
+                eManager.update(deltaTime, timeMultiplier, camera, viewport);
                 tManager.manageShake(deltaTime, timeMultiplier);
                 break;
             default:
@@ -123,6 +123,10 @@ public class InGame extends MyScreen {
             case Desktop:
                 if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) decreaseGameSpeed();
                 if (Gdx.input.isKeyJustPressed(Input.Keys.W)) increaseGameSpeed();
+                if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+                    if (pauseButton.isTouchable()) pause();
+                    else resumeGame();
+                }
                 if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) Gdx.app.exit();
             default:
                 break;
@@ -131,12 +135,12 @@ public class InGame extends MyScreen {
 
     @Override
     void draw(SpriteBatch batch) {
-        effectsManager.renderLight();
+        eManager.renderLight();
         batch.begin();
         player.draw(batch);
         for (Bullet b : bullets) b.draw(batch);
         director.draw(batch);
-        effectsManager.draw(batch);
+        eManager.draw(batch);
         batch.end();
 
         if (game.debug) b2dr.render(world, camera.combined);
@@ -198,7 +202,7 @@ public class InGame extends MyScreen {
         bullets.clear();
 
         director.dispose();
-        effectsManager.dispose();
+        eManager.dispose();
     }
 
     @Override
@@ -218,14 +222,10 @@ public class InGame extends MyScreen {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 switch (state) {
-                    case PAUSE:
-                        break;
                     case RESUME:
                     case PLAY:
+                        pause();
                     default:
-                        pauseButton.setTouchable(Touchable.disabled);
-                        pauseAnimation();
-                        state = State.PAUSE;
                         break;
                 }
             }
@@ -239,18 +239,7 @@ public class InGame extends MyScreen {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) { return true; }
 
             @Override
-            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-                pauseAnimationReverse();
-                float delay = 1.2f;
-                Timer.schedule(new Timer.Task() {
-                    @Override
-                    public void run() {
-                        pauseButton.setTouchable(Touchable.disabled);
-                        game.setScreen(new MainMenu(game));
-                        dispose();
-                    }
-                }, delay);
-            }
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) { resumeGame(); }
         });
 
         resumeButton = new TextButton("Resume", game.skin);
@@ -329,11 +318,6 @@ public class InGame extends MyScreen {
     }
 
     @Override
-    public void resize(int width, int height) {
-        super.resize(width, height);
-    }
-
-    @Override
     public void pause() {
         super.pause();
         pauseButton.setTouchable(Touchable.disabled);
@@ -341,9 +325,15 @@ public class InGame extends MyScreen {
         state = State.PAUSE;
     }
 
-    @Override
-    public void hide() {
-        super.hide();
-        state = State.PAUSE;
+    private void resumeGame() {
+        pauseAnimationReverse();
+        float delay = 1.2f;
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                pauseButton.setTouchable(Touchable.enabled);
+                state = State.RESUME;
+            }
+        }, delay);
     }
 }

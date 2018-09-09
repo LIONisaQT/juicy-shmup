@@ -12,6 +12,7 @@ import com.badlogic.gdx.physics.box2d.Shape;
 import com.badlogic.gdx.physics.box2d.World;
 
 import box2dLight.PointLight;
+import io.github.lionisaqt.JuicyShmup;
 import io.github.lionisaqt.screens.InGame;
 import io.github.lionisaqt.utils.EntityInfo;
 
@@ -21,9 +22,11 @@ import static io.github.lionisaqt.JuicyShmup.PPM;
  * Abstract class for generic space objects.
  * @author Ryan Shee */
 abstract class SpaceEntity extends Sprite {
+    /* Reference to the game for assets */
+    JuicyShmup game;
     private World world;    // Need world to build body
     InGame screen;          // Reference for in-game stuff
-    Body body;              // Physics body
+    public Body body;       // Physics body
     Sprite sprite;          // Rendered image
     float scale;            // Used to convert pixels to box2d meters
     EntityInfo info;        // Contains entity's information, passed into body's user data
@@ -32,7 +35,8 @@ abstract class SpaceEntity extends Sprite {
 
     /** Constructs a space entity.
      * @param screen Reference for in-game stuff */
-    SpaceEntity(InGame screen) {
+    SpaceEntity(JuicyShmup game, InGame screen) {
+        this.game = game;
         this.screen = screen;
         world = screen.world;
         info = new EntityInfo();
@@ -75,15 +79,14 @@ abstract class SpaceEntity extends Sprite {
      * @param deltaTime Time since last frame was called */
     public abstract void update(float deltaTime);
 
-    /** Some things may do things other things when they die.
-     * @param deltaTime Time since last frame was called */
-    public void die(float deltaTime) {
+    /** Some things may do things other things when they die. */
+    public void die() {
         /* Explosion light effect */
-        PointLight p = screen.effectsManager.lightPool.obtain();
+        PointLight p = screen.eManager.lightPool.obtain();
         p.setColor(color);
         p.setDistance(1500 * info.impact * PPM);
         p.setPosition(body.getPosition());
-        screen.effectsManager.lightEffects.add(p);
+        screen.eManager.lightEffects.add(p);
 
         body.setActive(false);
         if (!body.isActive()) screen.world.destroyBody(body);

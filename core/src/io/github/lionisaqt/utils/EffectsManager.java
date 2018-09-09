@@ -102,7 +102,7 @@ public class EffectsManager {
 
         /* Shrinks light effect from explosion */
         for (PointLight p : lightEffects) {
-            if (p.getDistance() > 0.01) p.setDistance(p.getDistance() - deltaTime * 20);
+            if (p.getDistance() > 0.01) p.setDistance(p.getDistance() - deltaTime * 5);
             else {
                 lightEffects.removeValue(p, true);
                 lightPool.free(p);

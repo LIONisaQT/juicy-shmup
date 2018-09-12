@@ -39,7 +39,7 @@ public class InGame extends MyScreen {
     private BackgroundColor backgroundColor;
     private Label scoreLabel, pauseLabel;
     private TextButton pauseButton, menuButton, resumeButton, exitButton;
-    private int score = 20001;
+    private int score = 0;
 
     public final EffectsManager eManager;
 
@@ -239,7 +239,10 @@ public class InGame extends MyScreen {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) { return true; }
 
             @Override
-            public void touchUp(InputEvent event, float x, float y, int pointer, int button) { resumeGame(); }
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                dispose();
+                game.setScreen(new MainMenu(game));
+            }
         });
 
         resumeButton = new TextButton("Resume", game.skin);

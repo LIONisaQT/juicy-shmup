@@ -35,8 +35,8 @@ public class MainMenu extends MyScreen {
             }
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-                game.setScreen(new InGame(game));
                 dispose();
+                game.setScreen(new InGame(game));
             }
         });
 
@@ -91,8 +91,8 @@ public class MainMenu extends MyScreen {
                 break;
             case Desktop:
             if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-                game.setScreen(new InGame(game));
                 dispose();
+                game.setScreen(new InGame(game));
             }
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 dispose();

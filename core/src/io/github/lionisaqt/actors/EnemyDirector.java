@@ -83,13 +83,13 @@ public class EnemyDirector {
                     enemies.add(d);
                 }
             case NOOB:
-//                noobSpawnTimer -= deltaTime;
-//                if (noobSpawnTimer <= 0) {
-//                    noobSpawnTimer = baseNoobTimer;
-//                    Enemy e = enemyPool.obtain();
-//                    e.init();
-//                    enemies.add(e);
-//                }
+                noobSpawnTimer -= deltaTime;
+                if (noobSpawnTimer <= 0) {
+                    noobSpawnTimer = baseNoobTimer;
+                    Enemy e = enemyPool.obtain();
+                    e.init();
+                    enemies.add(e);
+                }
                 break;
             default:
                 break;

@@ -1,5 +1,6 @@
 package io.github.lionisaqt.utils;
 
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
@@ -16,8 +17,13 @@ public class B2dContactListener implements ContactListener {
 
     @Override
     public void beginContact(Contact contact) {
-        EntityInfo a = (EntityInfo)contact.getFixtureA().getBody().getUserData();
-        EntityInfo b = (EntityInfo)contact.getFixtureB().getBody().getUserData();
+        /* Body variables in case I want to do something with body.isBullet() */
+        Body aBody = contact.getFixtureA().getBody();
+        Body bBody = contact.getFixtureB().getBody();
+
+        /* EntityInfo variables for everything else */
+        EntityInfo a = (EntityInfo)aBody.getUserData();
+        EntityInfo b = (EntityInfo)bBody.getUserData();
 
         /* If two entities of opposing sides collide, deal damage to both of them */
         if ((a.friendly && !b.friendly) || (!a.friendly && b.friendly)) {

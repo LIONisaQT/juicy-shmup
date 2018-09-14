@@ -70,14 +70,14 @@ public class Bullet extends SpaceEntity implements Poolable {
         }
 
         sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
-        ParticleEffectPool.PooledEffect p = screen.eManager.tracersPool.obtain();
+        ParticleEffectPool.PooledEffect p = info.friendly ? screen.eManager.tracersPool.obtain() : screen.eManager.enemyTracersPool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y + 1);
         p.scaleEffect(scale * 2.5f);
         p.start();
         screen.eManager.effects.add(p);
 
         /* Destroys bullet if offscreen */
-        if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT  * PPM) free();
+        if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT  * PPM || body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 < 0) free();
 }
 
     @Override

@@ -2,8 +2,8 @@ death
 - Delay -
 active: false
 - Duration - 
-lowMin: 200.0
-lowMax: 200.0
+lowMin: 100.0
+lowMax: 100.0
 - Count - 
 min: 0
 max: 1500
@@ -20,8 +20,8 @@ timeline0: 0.0
 - Life - 
 lowMin: 0.0
 lowMax: 0.0
-highMin: 1000.0
-highMax: 1000.0
+highMin: 500.0
+highMax: 500.0
 relative: false
 scalingCount: 2
 scaling0: 0.4489796
@@ -156,7 +156,7 @@ scaling5: 0.101123594
 scaling6: 0.101123594
 scaling7: 0.19662921
 scaling8: 0.28089887
-scaling9: 0.85393256
+scaling9: 0.0
 timelineCount: 10
 timeline0: 0.0
 timeline1: 0.40206185
@@ -167,7 +167,7 @@ timeline5: 0.71546394
 timeline6: 0.73676974
 timeline7: 0.76082474
 timeline8: 0.8158076
-timeline9: 0.9993127
+timeline9: 1.0
 - Options - 
 attached: false
 continuous: false

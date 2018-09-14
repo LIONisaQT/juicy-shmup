@@ -26,9 +26,11 @@ public class EffectsManager {
             effectPool,                     // Generic explosion
             enemyDeathPool,                 // Enemy death
             shotPool,                       // Player shooting
+            enemyShotPool,                  // Enemy shooting
             enginePool,                     // Player engine
             enemyEnginePool,                // Enemy engine
-            tracersPool;                    // Friendly bullet tracer
+            tracersPool,                    // Friendly bullet tracer
+            enemyTracersPool;               // Enemy bullet tracer
 
     public RayHandler rayHandler;
     public Array<PointLight> lightEffects;  // Holds all light effects for dying entities
@@ -51,6 +53,11 @@ public class EffectsManager {
         pShoot.load(Gdx.files.internal("effects/muzzle_flash.p"), Gdx.files.internal("effects/"));
         shotPool = new ParticleEffectPool(pShoot, 1, 100);
 
+        /* Enemy shoot */
+        ParticleEffect eShoot = new ParticleEffect();
+        eShoot.load(Gdx.files.internal("effects/enemy_muzzle_flash.p"), Gdx.files.internal("effects/"));
+        enemyShotPool = new ParticleEffectPool(eShoot, 1, 100);
+
         /* Player engine */
         ParticleEffect engine = new ParticleEffect();
         engine.load(Gdx.files.internal("effects/engine.p"), Gdx.files.internal("effects/"));
@@ -65,6 +72,11 @@ public class EffectsManager {
         ParticleEffect tracer = new ParticleEffect();
         tracer.load(Gdx.files.internal("effects/tracer.p"), Gdx.files.internal("effects/"));
         tracersPool = new ParticleEffectPool(tracer, 1, 100);
+
+        /* Enemy bullet tracers */
+        ParticleEffect eTracer = new ParticleEffect();
+        eTracer.load(Gdx.files.internal("effects/enemy_tracer.p"), Gdx.files.internal("effects/"));
+        enemyTracersPool = new ParticleEffectPool(eTracer, 1, 100);
     }
 
     /** Helper function that initializes the light array and pool.
@@ -102,7 +114,7 @@ public class EffectsManager {
 
         /* Shrinks light effect from explosion */
         for (PointLight p : lightEffects) {
-            if (p.getDistance() > 0.01) p.setDistance(p.getDistance() - deltaTime * 5);
+            if (p.getDistance() > 0.01) p.setDistance(p.getDistance() - deltaTime * 10);
             else {
                 lightEffects.removeValue(p, true);
                 lightPool.free(p);

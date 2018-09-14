@@ -1,5 +1,6 @@
 package io.github.lionisaqt.actors;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
@@ -20,7 +21,7 @@ public class EnemyDirector {
 
     /* Base spawn timers for various tiers of enemies */
     private float baseNoobTimer = 1f;
-    private float baseVetTimer = 1f;
+    private float baseVetTimer = 5f;
     private float baseEliteTimer = 15f;
     private float baseProTimer = 20f;
     private float baseBaronTimer = 30f;
@@ -32,6 +33,12 @@ public class EnemyDirector {
 
     /* Current spawn timers */
     private float noobSpawnTimer, vetSpawnTimer, proSpawnTimer, eliteSpawnTimer, baronSpawnTimer, aceSpawnTimer;
+
+    /* Maximum amount of specific units allowed at any given time */
+    private final int maxDF;
+
+    /* Current number of specific unit at any given time */
+    int currDF;
 
     public EnemyDirector(JuicyShmup game, InGame screen) {
         this.screen = screen;
@@ -45,6 +52,9 @@ public class EnemyDirector {
         eliteSpawnTimer = baseEliteTimer;
         baronSpawnTimer = baseBaronTimer;
         aceSpawnTimer = baseAceTimer;
+
+        maxDF = 3;
+        currDF = 0;
 
         enemies = new Array<>();
         EnemyDirector director = this;
@@ -75,15 +85,16 @@ public class EnemyDirector {
             case ELITE:
             case PRO:
             case VET:
-                vetSpawnTimer -= deltaTime;
-                if (vetSpawnTimer <= 0) {
+                vetSpawnTimer -= deltaTime / screen.timeMultiplier;
+                if (vetSpawnTimer <= 0 && currDF < maxDF) {
                     vetSpawnTimer = baseVetTimer;
                     Dogfighter d = dogfighterPool.obtain();
                     d.init();
                     enemies.add(d);
+                    currDF++;
                 }
             case NOOB:
-                noobSpawnTimer -= deltaTime;
+                noobSpawnTimer -= deltaTime / screen.timeMultiplier;
                 if (noobSpawnTimer <= 0) {
                     noobSpawnTimer = baseNoobTimer;
                     Enemy e = enemyPool.obtain();

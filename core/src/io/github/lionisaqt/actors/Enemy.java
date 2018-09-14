@@ -1,6 +1,5 @@
 package io.github.lionisaqt.actors;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -19,9 +18,7 @@ import static io.github.lionisaqt.JuicyShmup.PPM;
  * @author Ryan Shee */
 public class Enemy extends SpaceEntity implements Poolable {
     /* Reference to director for the pool and enemy array */
-    private EnemyDirector director;
-
-    boolean alive;
+    EnemyDirector director;
 
     /** Constructs a new enemy.
      * @param game Reference to the game for assets
@@ -42,8 +39,6 @@ public class Enemy extends SpaceEntity implements Poolable {
 
     /** Initializes important values if they're null, called after getting an enemy from the pool. */
     public void init() {
-        alive = true;
-
         if (sprite == null) {
             sprite = new Sprite(game.assets.manager.get(game.assets.img));
             sprite.setScale(scale);
@@ -83,7 +78,7 @@ public class Enemy extends SpaceEntity implements Poolable {
         screen.eManager.effects.add(p);
 
         /* Checks to make sure body speed is constant */
-        if (body.getLinearVelocity().y >= info.speed) body.setLinearVelocity(body.getLinearVelocity().x, info.speed);
+        if (Math.abs(body.getLinearVelocity().x) >= Math.abs(info.speed)) body.setLinearVelocity(body.getLinearVelocity().x > 0 ? -info.speed : info.speed, body.getLinearVelocity().y);
 
         /* Kills enemy if offscreen */
         if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 < 0) free();
@@ -97,7 +92,7 @@ public class Enemy extends SpaceEntity implements Poolable {
             die();
             return;
         }
-        body.setLinearVelocity(body.getLinearVelocity().x + (body.getPosition().x < playerPos.x ? 1 : -1) * (float)(1 / Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y)), info.speed);
+        body.setLinearVelocity(body.getLinearVelocity().x + (body.getPosition().x < playerPos.x ? 1 : -1) * (float)(-info.speed / 4 / Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y)), info.speed);
         update(deltaTime);
     }
 
@@ -105,7 +100,7 @@ public class Enemy extends SpaceEntity implements Poolable {
     public void die() {
         PooledEffect p = screen.eManager.enemyDeathPool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y);
-        p.scaleEffect(scale * info.maxHp * PPM * 3);
+        p.scaleEffect(scale * info.maxHp * PPM * 2.5f);
         p.start();
         screen.eManager.effects.add(p);
 
@@ -118,7 +113,6 @@ public class Enemy extends SpaceEntity implements Poolable {
     /** Removes enemy from the active array of enemies and frees it from the pool. Sends body to the
      * array of dead bodies for processing. */
     public void free() {
-        alive = false;
         director.enemies.removeValue(this, false);
         director.enemyPool.free(this);
     }

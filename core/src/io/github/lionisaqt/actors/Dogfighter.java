@@ -1,14 +1,9 @@
 package io.github.lionisaqt.actors;
 
-import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
-
-import java.util.Random;
 
 import box2dLight.PointLight;
 import io.github.lionisaqt.JuicyShmup;
@@ -22,26 +17,29 @@ public class Dogfighter extends Enemy {
     private float
             shotTimer,
             fireDelay,
-            stateTimer;
+            reloadTimer;
 
-    /* The muzzle flash animation */
-    private Animation<TextureRegion> shoot;
-
-    /* Left and right muzzle flashes */
-    private Sprite flashLeft, flashRight;
-
-    /* Controls when the muzzle flash plays */
-    private boolean isShooting;
+    private final float reloadDuration;
 
     /* Muzzle flash lights */
-    private PointLight muzzleLightLeft, muzzleLightRight;
+    private PointLight muzzleFlash;
+
+    /* Number of shots per burst */
+    private final int burstNum;
+    private int numShots;
 
     Dogfighter(JuicyShmup game, InGame screen, EnemyDirector director) {
         super(game, screen, director);
+        scale = 0.25f * PPM;
         info.maxHp = 100;
         info.hp = info.maxHp;
         info.dmg = 10;
-        fireDelay = 0.5f;
+        info.impact = 0.3f;
+        fireDelay = 0.2f;
+        reloadDuration = 1f;
+        reloadTimer = reloadDuration;
+        burstNum = 10;
+        numShots = burstNum;
     }
 
     @Override
@@ -53,98 +51,82 @@ public class Dogfighter extends Enemy {
     }
 
     @Override
-    public void update(float deltaTime) {
-        super.update(deltaTime);
-        if (alive) {
-            muzzleLightLeft.setPosition(body.getPosition().x - 1.25f, body.getPosition().y - 0.75f);
-            muzzleLightRight.setPosition(body.getPosition().x + 1.25f, body.getPosition().y - 0.75f);
-
-            flashLeft.setPosition(body.getPosition().x - 2, body.getPosition().y - 1f);
-            flashRight.setPosition(body.getPosition().x, body.getPosition().y - 1f);
-        }
-    }
-
-
-    @Override
     public void update(float deltaTime, Vector2 playerPos) {
         if (info.hp <= 0) {
             die();
             return;
         }
 
-        shoot(deltaTime);
-        if (isShooting) {
-            Random rng = new Random();
-            muzzleLightLeft.setActive(rng.nextBoolean());
-            muzzleLightRight.setActive(rng.nextBoolean());
-            flashRight.flip(true, false);
+        body.setLinearVelocity(body.getLinearVelocity().x + (body.getPosition().x < playerPos.x ? 1 : -1) * (float)(-info.speed / 2 / Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y)), info.speed);
+        if (Math.abs(body.getPosition().x - playerPos.x) < 0.25f) {
+            body.setLinearVelocity(0, body.getLinearVelocity().y);
         }
 
+        if (Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y) < 20) {
+            body.setLinearVelocity(body.getLinearVelocity().x, 0);
+            shoot(deltaTime);
+        } else {
+            body.setLinearVelocity(body.getLinearVelocity().x, info.speed);
+        }
+
+        muzzleFlash.setPosition(body.getPosition().x, body.getPosition().y - 1.25f);
         update(deltaTime);
     }
 
     @Override
-    public void draw(SpriteBatch batch) {
-        super.draw(batch);
-
-        if (isShooting) {
-            flashLeft.draw(batch);
-            flashRight.draw(batch);
-        }
-    }
+    public void draw(SpriteBatch batch) { super.draw(batch); }
 
     /** Fires a bullet, obtained from the pool. Adds trauma.
      * @param deltaTime time since last frame was called */
     private void shoot(float deltaTime) {
-        isShooting = true;
-        shotTimer -= deltaTime / screen.timeMultiplier;
+        if (numShots > 0) {
+            shotTimer -= deltaTime / screen.timeMultiplier;
+            if (shotTimer <= 0) {
+                numShots--;
+                muzzleFlash.setActive(true);
 
-        /* Play animation based on time */
-        flashLeft.setRegion(shoot.getKeyFrame(stateTimer));
-        flashRight.setRegion(shoot.getKeyFrame(stateTimer));
+                ParticleEffectPool.PooledEffect p = screen.eManager.enemyShotPool.obtain();
+                p.setPosition(body.getPosition().x, body.getPosition().y - 1);
+                p.scaleEffect(scale, -scale);
+                p.start();
+                screen.eManager.effects.add(p);
 
-        if (shotTimer <= 0) {
-            ParticleEffectPool.PooledEffect p = screen.eManager.shotPool.obtain();
-            p.setPosition(body.getPosition().x, body.getPosition().y - 1);
-            p.scaleEffect(scale);
-            p.start();
-            screen.eManager.effects.add(p);
-
-            Bullet b = screen.bulletPool.obtain();                              // Obtain a bullet from pool, or creates one if a free bullet is unavailable
-            b.init(body.getPosition().x, body.getPosition().y, false);  // Initializes bullet
-            screen.bullets.add(b);                                              // Adds bullet to list of active bullets
-            shotTimer += fireDelay;                                             // Add delay for next shot
+                Bullet b = screen.bulletPool.obtain();                              // Obtain a bullet from pool, or creates one if a free bullet is unavailable
+                b.init(body.getPosition().x, body.getPosition().y, false);  // Initializes bullet
+                screen.bullets.add(b);                                              // Adds bullet to list of active bullets
+                shotTimer += fireDelay;                                             // Add delay for next shot
+            } else {
+                muzzleFlash.setActive(false);
+            }
+        } else {
+            muzzleFlash.setActive(false);
+            reloadTimer -= deltaTime / screen.timeMultiplier;
+            if (reloadTimer <= 0) {
+                numShots = burstNum;
+                reloadTimer = reloadDuration;
+            }
         }
-
-        stateTimer += deltaTime / 10;                                            // Adds time to animation timer
     }
 
     /** Initializes muzzle flash animations and lights. */
     private void initializeFlash() {
-        TextureRegion flashAnim = new TextureRegion(game.assets.manager.get(game.assets.flash), 0, 0, 32, 32);
-        Array<TextureRegion> frames = new Array<>();
-        for (int i = 0; i < 6; i++)
-            frames.add(new TextureRegion(game.assets.manager.get(game.assets.flash), i * 32, 0, 32, 32));
-        shoot = new Animation<>(0.01f, frames, Animation.PlayMode.LOOP);
-        frames.clear();
-        stateTimer = 0;
+        muzzleFlash = new PointLight(screen.eManager.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
+        muzzleFlash.setStaticLight(false);
+        muzzleFlash.setSoft(true);
+        muzzleFlash.setActive(false);
+    }
 
-        flashLeft = new Sprite();
-        flashLeft.setBounds(0, 0, 32 * PPM, 32 * PPM);
-        flashLeft.setRegion(flashAnim);
-        flashLeft.setScale(2, 1);
+    @Override
+    public void free() {
+        director.enemies.removeValue(this, false);
+        director.dogfighterPool.free(this);
+        director.currDF--;
+    }
 
-        flashRight = new Sprite();
-        flashRight.setBounds(0, 0, 32 * PPM, 32 * PPM);
-        flashRight.setRegion(flashAnim);
-        flashRight.setScale(flashLeft.getScaleX(), flashLeft.getScaleY());
-
-        muzzleLightLeft = new PointLight(screen.eManager.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
-        muzzleLightLeft.setStaticLight(false);
-        muzzleLightLeft.setSoft(true);
-
-        muzzleLightRight = new PointLight(screen.eManager.rayHandler, 128, color, 100 * PPM, body.getPosition().x, body.getPosition().y);
-        muzzleLightRight.setStaticLight(false);
-        muzzleLightRight.setSoft(true);
+    @Override
+    public void reset() {
+        super.reset();
+        muzzleFlash.remove(true);
+        muzzleFlash = null;
     }
 }

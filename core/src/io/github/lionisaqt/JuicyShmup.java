@@ -14,6 +14,10 @@ public class JuicyShmup extends Game {
 	public static final float GAME_WIDTH = GAME_HEIGHT * 9/16f;
 	public static final float PPM = 1/32f;
 
+	public static final short PLAYER_BIT = 2;
+	public static final short ENEMY_BIT = 4;
+	public static final short ITEM_BIT = 8;
+
 	public final Assets assets = new Assets();
 	public SpriteBatch batch;
 

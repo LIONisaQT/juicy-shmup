@@ -1,6 +1,5 @@
 package io.github.lionisaqt.actors;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -45,8 +44,7 @@ public class Dogfighter extends Enemy {
     @Override
     public void init() {
         super.init();
-        sprite.setTexture(game.assets.manager.get(game.assets.ship));
-        sprite.flip(false, true);
+        sprite.setTexture(game.assets.manager.get(game.assets.dogfighter));
         initializeFlash();
     }
 
@@ -57,17 +55,25 @@ public class Dogfighter extends Enemy {
             return;
         }
 
-        body.setLinearVelocity(body.getLinearVelocity().x + (body.getPosition().x < playerPos.x ? 1 : -1) * (float)(-info.speed / 2 / Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y)), info.speed);
-        if (Math.abs(body.getPosition().x - playerPos.x) < 0.25f) {
-            body.setLinearVelocity(0, body.getLinearVelocity().y);
-        }
+        // Track player if in front
+        if (body.getPosition().y > playerPos.y) {
+            body.setLinearVelocity(body.getLinearVelocity().x + (body.getPosition().x < playerPos.x ? 1 : -1) * (float)(-info.speed / 2 / Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y)), info.speed);
 
-        if (Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y) < 20) {
-            body.setLinearVelocity(body.getLinearVelocity().x, 0);
-            shoot(deltaTime);
-        } else {
-            body.setLinearVelocity(body.getLinearVelocity().x, info.speed);
-        }
+            // Stop tracking if within certain x range, used so it doesn't shake from decimal inequality
+            if (Math.abs(body.getPosition().x - playerPos.x) < 0.25f)
+                body.setLinearVelocity(0, body.getLinearVelocity().y);
+
+            // Begin engaging at certain range
+            if (Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y) < 20) {
+                body.setLinearVelocity(body.getLinearVelocity().x, 0);
+
+                // Keep distance from player
+                if (Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y) < 15)
+                    body.setLinearVelocity(body.getLinearVelocity().x, - info.speed / 1.25f);
+
+                shoot(deltaTime);
+            }
+        } else body.setLinearVelocity(0, info.speed);
 
         muzzleFlash.setPosition(body.getPosition().x, body.getPosition().y - 1.25f);
         update(deltaTime);

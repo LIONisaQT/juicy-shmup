@@ -20,8 +20,8 @@ timeline0: 0.0
 - Life - 
 lowMin: 0.0
 lowMax: 0.0
-highMin: 500.0
-highMax: 1000.0
+highMin: 250.0
+highMax: 500.0
 relative: false
 scalingCount: 3
 scaling0: 1.0
@@ -75,7 +75,7 @@ active: false
 active: true
 lowMin: 0.0
 lowMax: 0.0
-highMin: 30.0
+highMin: 150.0
 highMax: 300.0
 relative: false
 scalingCount: 2
@@ -102,16 +102,7 @@ timeline2: 1.0
 - Rotation - 
 active: false
 - Wind - 
-active: true
-lowMin: 0.0
-lowMax: 0.0
-highMin: -100.0
-highMax: 100.0
-relative: false
-scalingCount: 1
-scaling0: 1.0
-timelineCount: 1
-timeline0: 0.0
+active: false
 - Gravity - 
 active: false
 - Tint - 
@@ -144,8 +135,7 @@ aligned: false
 additive: true
 behind: false
 premultipliedAlpha: false
-spriteMode: animated
+spriteMode: single
 - Image Paths -
 particle.png
-particle_loop.png
 

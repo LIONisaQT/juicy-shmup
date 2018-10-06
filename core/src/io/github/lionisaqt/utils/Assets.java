@@ -14,6 +14,8 @@ public class Assets {
     public final AssetDescriptor<Skin> skin = new AssetDescriptor<>("skin/quantum-horizon-ui.json", Skin.class);
     public final AssetDescriptor<Texture> img = new AssetDescriptor<>("textures/badlogic.jpg", Texture.class);
     public final AssetDescriptor<Texture> ship = new AssetDescriptor<>("textures/ship.png", Texture.class);
+    public final AssetDescriptor<Texture> kamikaze = new AssetDescriptor<Texture>("textures/kamikaze.png", Texture.class);
+    public final AssetDescriptor<Texture> dogfighter = new AssetDescriptor<Texture>("textures/dogfighter.png", Texture.class);
     public final AssetDescriptor<Texture> bullet = new AssetDescriptor<>("effects/particle.png", Texture.class);
     public final AssetDescriptor<Sound> shoot = new AssetDescriptor<>("sounds/shoot1.wav", Sound.class);
     public final AssetDescriptor<Texture> flash = new AssetDescriptor<>("textures/flash.png", Texture.class);
@@ -23,6 +25,8 @@ public class Assets {
         manager.load(skin);
         manager.load(img);
         manager.load(ship);
+        manager.load(kamikaze);
+        manager.load(dogfighter);
         manager.load(flash);
         manager.load(shoot);
         manager.load(bullet);

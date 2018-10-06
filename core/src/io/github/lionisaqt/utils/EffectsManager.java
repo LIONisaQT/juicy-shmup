@@ -7,10 +7,14 @@ import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.viewport.Viewport;
+
+import java.util.Random;
 
 import box2dLight.PointLight;
 import box2dLight.RayHandler;
@@ -34,6 +38,9 @@ public class EffectsManager {
 
     public RayHandler rayHandler;
     public Array<PointLight> lightEffects;  // Holds all light effects for dying entities
+    public Array<PointLight> bgStars;       // Background stars
+    private final short numStars = 35;      // Number of background stars
+    private final short starSpeed = 9;      // Maximum speed of stars
     public Pool<PointLight> lightPool;      // Pointlight pool for entity deaths
 
     /** Helper function that loads all the particles and particle pools. */
@@ -83,12 +90,10 @@ public class EffectsManager {
      * @param world RayHandler needs a world to light up */
     public void loadLightEffects(World world) {
         rayHandler = new RayHandler(world);
-
-        PointLight pl = new PointLight(rayHandler, 128, new Color(0.2f,1,1,1), 300 * PPM, JuicyShmup.GAME_WIDTH / 2 * PPM, JuicyShmup.GAME_HEIGHT / 2 * PPM);
-        pl.setStaticLight(false);
-        pl.setSoft(true);
+        rayHandler.setAmbientLight(1f);
 
         lightEffects = new Array<>();
+        bgStars = new Array<>();
         lightPool = new Pool<PointLight>() {
             @Override
             protected PointLight newObject() {
@@ -98,6 +103,22 @@ public class EffectsManager {
                 return p;
             }
         };
+
+        for (int i = 0; i < numStars; i++) {
+            Random rng = new Random();
+            PointLight p = lightPool.obtain();
+            p.setColor(rng.nextFloat(), rng.nextFloat(), rng.nextFloat(), rng.nextFloat() * 0.5f + 0.5f);
+            p.setDistance((rng.nextInt(200) + 100) * PPM);
+
+            BodyDef bDef = new BodyDef();
+            bDef.position.set(rng.nextInt((int)(JuicyShmup.GAME_WIDTH * PPM)), rng.nextInt((int)(JuicyShmup.GAME_HEIGHT * PPM)));
+            bDef.type = BodyDef.BodyType.DynamicBody;
+            Body b = world.createBody(bDef);
+            p.attachToBody(b);
+
+            p.getBody().setLinearVelocity(0, -rng.nextFloat() * starSpeed - 1);
+            bgStars.add(p);
+        }
     }
 
     /** Updates all effects, and removes it from the active array when finished.
@@ -121,8 +142,24 @@ public class EffectsManager {
             }
         }
 
+        backgroundUpdate();
+
         rayHandler.setCombinedMatrix(camera.combined,0,0, viewport.getScreenWidth(), viewport.getScreenHeight());
         rayHandler.update();
+    }
+
+
+    private void backgroundUpdate() {
+        Random rng = new Random();
+        for (PointLight p : bgStars) {
+            if (p.getBody().getPosition().y < -p.getDistance()) {
+                p.setColor(rng.nextFloat(), rng.nextFloat(), rng.nextFloat(), rng.nextFloat() * 0.5f + 0.5f);
+                p.setDistance((rng.nextInt(200) + 100) * PPM);
+
+                p.getBody().setTransform(rng.nextInt((int)(JuicyShmup.GAME_WIDTH * PPM)), JuicyShmup.GAME_HEIGHT * PPM + p.getDistance(), 0);
+                p.getBody().setLinearVelocity(0, -rng.nextFloat() * starSpeed - 1);
+            }
+        }
     }
 
     /** Draws all active effects.

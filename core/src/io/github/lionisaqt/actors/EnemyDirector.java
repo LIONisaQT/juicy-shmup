@@ -17,15 +17,22 @@ public class EnemyDirector {
     private Difficulty difficulty;
 
     /* Calculates spawn rate */
-    private int scoreDelta;
+    private int previousScore;
+
+    /* How often score delta is checked */
+    private float checkDelta;
+
+    /* Counts how many times scoreDelta hasn't increased enough */
+    private short easyCount;
 
     /* Base spawn timers for various tiers of enemies */
-    private float baseNoobTimer = 1f;
-    private float baseVetTimer = 5f;
-    private float baseEliteTimer = 15f;
-    private float baseProTimer = 20f;
-    private float baseBaronTimer = 30f;
-    private float baseAceTimer = 60f;
+    private float baseMultiplier;
+    private float baseNoobTimer;
+    private float baseVetTimer;
+    private float baseEliteTimer;
+    private float baseProTimer;
+    private float baseBaronTimer;
+    private float baseAceTimer;
 
     public Array<Enemy> enemies;
     public Pool<Enemy> enemyPool;
@@ -43,9 +50,15 @@ public class EnemyDirector {
     public EnemyDirector(JuicyShmup game, InGame screen) {
         this.screen = screen;
         difficulty = Difficulty.NOOB;
-        scoreDelta = 0;
 
-        /* Setting default spawn timers for the different tiers */
+        baseMultiplier = 1f;
+        baseNoobTimer = 1f * baseMultiplier;
+        baseVetTimer = 5f * baseMultiplier;
+        baseEliteTimer = 15f * baseMultiplier;
+        baseProTimer = 20f * baseMultiplier;
+        baseBaronTimer = 30f * baseMultiplier;
+        baseAceTimer = 60f * baseMultiplier;
+
         noobSpawnTimer = baseNoobTimer;
         vetSpawnTimer = baseVetTimer;
         proSpawnTimer = baseProTimer;
@@ -53,6 +66,9 @@ public class EnemyDirector {
         baronSpawnTimer = baseBaronTimer;
         aceSpawnTimer = baseAceTimer;
 
+        previousScore = 0;
+        checkDelta = 5;
+        easyCount = 3;
         maxDF = 3;
         currDF = 0;
 
@@ -74,7 +90,7 @@ public class EnemyDirector {
         spawnEnemy(deltaTime);
         updateEnemies(deltaTime, playerPos);
         updateDifficulty();
-        updateDelta();
+        updateDelta(deltaTime);
     }
 
     /** Spawns enemy. Calculates spawn of all tiers. */
@@ -121,11 +137,40 @@ public class EnemyDirector {
     }
 
     /** Updates enemy spawn rate based on score delta. Kill faster --> raise score delta --> increased spawns.
-     * More spawns --> get overwhelmed --> kill slower --> lower score delta --> decreased spawns. Score delta
-     * should never go below base values. This means the game should theoretically always be providing sizable
-     * challenge for the player. */
-    private void updateDelta() {
+     * More spawns --> get overwhelmed --> kill slower --> lower score delta --> decreased spawns. This means
+     * the game should theoretically always be providing sizable challenge for the player.
+     * TODO: Factor in player health delta maybe?
+     * */
+    private void updateDelta(float deltaTime) {
+        checkDelta -= deltaTime;
 
+        if (checkDelta <= 0) {
+            checkDelta = 5;
+            int scoreDelta = screen.getScore() - previousScore;
+
+            if (scoreDelta > 200) {
+                // Game is too easy
+                Gdx.app.log(getClass().getSimpleName(), "Increasing difficulty");
+                baseMultiplier /= 1.5f;
+                previousScore = screen.getScore();
+                if (easyCount < 3) easyCount++;
+            } else {
+                if (easyCount <= 0) {
+                    // Game is too hard
+                    Gdx.app.log(getClass().getSimpleName(), "Lowering difficulty");
+                    baseMultiplier *= 1.5f;
+                    previousScore = screen.getScore();
+                    easyCount = 3;
+                } else {
+                    // Game is just right
+                    Gdx.app.log(getClass().getSimpleName(), "Just right");
+                    baseMultiplier /= 1.20f;
+                }
+                easyCount--;
+            }
+
+            Gdx.app.log(getClass().getSimpleName(), scoreDelta + ", " + baseMultiplier);
+        }
     }
 
     /** Draws all enemies.

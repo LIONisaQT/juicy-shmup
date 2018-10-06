@@ -54,6 +54,8 @@ abstract class SpaceEntity extends Sprite {
         body = world.createBody(bDef);
 
         FixtureDef fDef = new FixtureDef();
+        fDef.filter.categoryBits = info.friendly ? JuicyShmup.PLAYER_BIT : JuicyShmup.ENEMY_BIT | JuicyShmup.ITEM_BIT;
+        fDef.filter.maskBits = info.friendly ? JuicyShmup.ENEMY_BIT | JuicyShmup.ITEM_BIT : JuicyShmup.PLAYER_BIT;
         Shape shape;
 
         switch (s) {

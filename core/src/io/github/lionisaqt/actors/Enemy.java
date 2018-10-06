@@ -40,7 +40,8 @@ public class Enemy extends SpaceEntity implements Poolable {
     /** Initializes important values if they're null, called after getting an enemy from the pool. */
     public void init() {
         if (sprite == null) {
-            sprite = new Sprite(game.assets.manager.get(game.assets.img));
+            sprite = new Sprite(game.assets.manager.get(game.assets.kamikaze));
+            sprite.flip(false, true);
             sprite.setScale(scale);
         }
 
@@ -100,7 +101,7 @@ public class Enemy extends SpaceEntity implements Poolable {
     public void die() {
         PooledEffect p = screen.eManager.enemyDeathPool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y);
-        p.scaleEffect(scale * info.maxHp * PPM * 2.5f);
+        p.scaleEffect(scale * 5);
         p.start();
         screen.eManager.effects.add(p);
 

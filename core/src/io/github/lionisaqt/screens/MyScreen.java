@@ -3,14 +3,18 @@ package io.github.lionisaqt.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import io.github.lionisaqt.JuicyShmup;
 import io.github.lionisaqt.utils.HUD;
+
+import static io.github.lionisaqt.JuicyShmup.PPM;
 
 /** A modified Screen.
  * @author Ryan Shee */
@@ -27,13 +31,15 @@ public abstract class MyScreen implements Screen {
     /* Camera size */
     Viewport viewport;
 
+    ShapeRenderer sr;
+
     MyScreen(final JuicyShmup game) {
         this.game = game;
 
         /* Create and move camera to center */
         camera = new OrthographicCamera();
         camera.setToOrtho(false);
-        viewport = new StretchViewport(JuicyShmup.GAME_WIDTH * JuicyShmup.PPM, JuicyShmup.GAME_HEIGHT * JuicyShmup.PPM, camera);
+        viewport = new StretchViewport(JuicyShmup.GAME_WIDTH * PPM, JuicyShmup.GAME_HEIGHT * PPM, camera);
         camera.translate(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
         camera.update();
 
@@ -42,13 +48,18 @@ public abstract class MyScreen implements Screen {
         hud.stage.setDebugAll(game.debug);
 
         addUI();
+
+        sr = new ShapeRenderer();
     }
 
     /** Adds UI elements to the HUD. */
     abstract void addUI();
 
     @Override
-    public void show() { Gdx.input.setInputProcessor(hud.stage); }
+    public void show() {
+        Gdx.input.setInputProcessor(hud.stage);
+
+    }
 
     @Override
     public void render(float delta) {

@@ -1,5 +1,6 @@
 package io.github.lionisaqt.actors;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -19,6 +20,8 @@ import static io.github.lionisaqt.JuicyShmup.PPM;
 public class Enemy extends SpaceEntity implements Poolable {
     /* Reference to director for the pool and enemy array */
     EnemyDirector director;
+
+    Sound deathSound;
 
     /** Constructs a new enemy.
      * @param game Reference to the game for assets
@@ -64,6 +67,8 @@ public class Enemy extends SpaceEntity implements Poolable {
             light.setSoft(true);
             light.setPosition(body.getPosition().x, body.getPosition().y + 1.1f);
         }
+
+        if (deathSound == null) deathSound = new Random().nextBoolean() ? game.assets.manager.get(game.assets.death1) : game.assets.manager.get(game.assets.death2);
     }
 
     @Override
@@ -99,6 +104,8 @@ public class Enemy extends SpaceEntity implements Poolable {
 
     @Override
     public void die() {
+        deathSound.play();
+
         PooledEffect p = screen.eManager.enemyDeathPool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y);
         p.scaleEffect(scale * 5);
@@ -125,6 +132,7 @@ public class Enemy extends SpaceEntity implements Poolable {
         color = null;
         body = null;
         sprite = null;
+        deathSound = null;
         info.hp = info.maxHp;
     }
 }

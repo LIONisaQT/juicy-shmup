@@ -1,13 +1,10 @@
 package io.github.lionisaqt.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -31,8 +28,6 @@ public abstract class MyScreen implements Screen {
     /* Camera size */
     Viewport viewport;
 
-    ShapeRenderer sr;
-
     MyScreen(final JuicyShmup game) {
         this.game = game;
 
@@ -48,8 +43,6 @@ public abstract class MyScreen implements Screen {
         hud.stage.setDebugAll(game.debug);
 
         addUI();
-
-        sr = new ShapeRenderer();
     }
 
     /** Adds UI elements to the HUD. */

@@ -14,10 +14,12 @@ public class Assets {
     public final AssetDescriptor<Skin> skin = new AssetDescriptor<>("skin/quantum-horizon-ui.json", Skin.class);
     public final AssetDescriptor<Texture> img = new AssetDescriptor<>("textures/badlogic.jpg", Texture.class);
     public final AssetDescriptor<Texture> ship = new AssetDescriptor<>("textures/ship.png", Texture.class);
-    public final AssetDescriptor<Texture> kamikaze = new AssetDescriptor<Texture>("textures/kamikaze.png", Texture.class);
-    public final AssetDescriptor<Texture> dogfighter = new AssetDescriptor<Texture>("textures/dogfighter.png", Texture.class);
+    public final AssetDescriptor<Texture> kamikaze = new AssetDescriptor<>("textures/kamikaze.png", Texture.class);
+    public final AssetDescriptor<Texture> dogfighter = new AssetDescriptor<>("textures/dogfighter.png", Texture.class);
     public final AssetDescriptor<Texture> bullet = new AssetDescriptor<>("effects/particle.png", Texture.class);
-    public final AssetDescriptor<Sound> shoot = new AssetDescriptor<>("sounds/shoot1.wav", Sound.class);
+    public final AssetDescriptor<Sound> shoot = new AssetDescriptor<>("sounds/laser1.mp3", Sound.class);
+    public final AssetDescriptor<Sound> death1 = new AssetDescriptor<>("sounds/explode1.wav", Sound.class);
+    public final AssetDescriptor<Sound> death2 = new AssetDescriptor<>("sounds/explode2.wav", Sound.class);
     public final AssetDescriptor<Texture> flash = new AssetDescriptor<>("textures/flash.png", Texture.class);
 
     /** Loads the assets. */
@@ -29,6 +31,8 @@ public class Assets {
         manager.load(dogfighter);
         manager.load(flash);
         manager.load(shoot);
+        manager.load(death1);
+        manager.load(death2);
         manager.load(bullet);
     }
 

@@ -1,8 +1,8 @@
 package io.github.lionisaqt.actors;
 
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.utils.Pool.Poolable;
 
@@ -15,6 +15,8 @@ import static io.github.lionisaqt.JuicyShmup.PPM;
 /** Poolable bullet class. Can be used for both friendly and non-friendly units.
  * @author Ryan Shee */
 public class Bullet extends SpaceEntity implements Poolable {
+    private Sound pew;
+
     /** Constructs a new bullet.
      * @param game Reference to the game for assets
      * @param screen Reference for in-game stuff */
@@ -59,7 +61,8 @@ public class Bullet extends SpaceEntity implements Poolable {
             light.attachToBody(body);
         }
 
-        // TODO: Play sound here
+        if (pew == null) pew = game.assets.manager.get(game.assets.shoot);
+        pew.play();
     }
 
     @Override
@@ -102,6 +105,7 @@ public class Bullet extends SpaceEntity implements Poolable {
         color = null;
         body = null;
         sprite = null;
+        pew = null;
         info.hp = info.maxHp;
     }
 }

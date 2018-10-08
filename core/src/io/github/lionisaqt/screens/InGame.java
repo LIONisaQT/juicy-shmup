@@ -51,7 +51,7 @@ public class InGame extends MyScreen {
     public Array<Bullet> bullets;           // Array of active bullets
     public Pool<Bullet> bulletPool;         // Pool of bullets
 
-    private final EnemyDirector director;   // Controls enemy spawn
+    public final EnemyDirector director;   // Controls enemy spawn
 
     public float timeMultiplier;            // Scales game speed
 

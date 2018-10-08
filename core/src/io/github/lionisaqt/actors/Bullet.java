@@ -84,7 +84,7 @@ public class Bullet extends SpaceEntity implements Poolable {
         screen.eManager.effects.add(p);*/
 
         /* Destroys bullet if offscreen */
-        if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT  * PPM || body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 < 0) free();
+        if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 > JuicyShmup.GAME_HEIGHT * PPM || body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 < 0) free();
 }
 
     @Override

@@ -51,7 +51,7 @@ public class Player extends SpaceEntity {
         super(game, screen);
         scale = 0.25f * PPM;
         fireDelay = 0.1f;
-        info.maxHp = 1;
+        info.maxHp = 1000;
         info.hp = info.maxHp;
         info.dmg = 100;
         info.speed = 15;
@@ -197,6 +197,8 @@ public class Player extends SpaceEntity {
 		    p.setPosition(body.getPosition());
 		    screen.eManager.lightEffects.add(p);
 		    game.currentSong.setVolume(0.25f);
+
+		    for (Enemy e : screen.director.enemies) e.info.hp = 0;
 	    }
 
     	screen.timeMultiplier = 5f;

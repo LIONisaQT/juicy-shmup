@@ -42,7 +42,7 @@ public class EnemyDirector {
     private float noobSpawnTimer, vetSpawnTimer, proSpawnTimer, eliteSpawnTimer, baronSpawnTimer, aceSpawnTimer;
 
     /* Maximum amount of specific units allowed at any given time */
-    private final int maxDF;
+    private int maxDF;
 
     /* Current number of specific unit at any given time */
     int currDF;
@@ -69,7 +69,8 @@ public class EnemyDirector {
         previousScore = 0;
         checkDelta = 5;
         easyCount = 3;
-        maxDF = 3;
+
+        maxDF = 1;
         currDF = 0;
 
         enemies = new Array<>();

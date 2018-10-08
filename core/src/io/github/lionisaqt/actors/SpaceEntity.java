@@ -63,15 +63,6 @@ abstract class SpaceEntity extends Sprite {
         /* What categories they collide with */
         fDef.filter.maskBits = info.friendly ? JuicyShmup.ENEMY_BIT | JuicyShmup.ITEM_BIT : JuicyShmup.PLAYER_BIT;
 
-        /*
-        * Special case for Dogfighters to prevent pile-up
-        * TODO: Make dogfighters pile up side by side (use horizontal "spaces" in front of the player can they can fill, like Vermintide 2)
-        * */
-	    if (getClass().getSimpleName().equals("Dogfighter")) {
-	    	fDef.filter.categoryBits = JuicyShmup.DF_BIT;
-	    	fDef.filter.maskBits = JuicyShmup.DF_BIT;
-	    }
-
         Shape shape;
 
         switch (s) {

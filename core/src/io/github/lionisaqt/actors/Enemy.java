@@ -31,7 +31,7 @@ public class Enemy extends SpaceEntity implements Poolable {
     Enemy(JuicyShmup game, InGame screen, EnemyDirector director) {
         super(game, screen);
         this.director = director;
-        scale = 0.25f * PPM;
+        scale = 0.2f * PPM;
         info.maxHp = 50;
         info.hp = info.maxHp;
         info.dmg = 100;
@@ -51,7 +51,7 @@ public class Enemy extends SpaceEntity implements Poolable {
         }
 
         if (body == null) {
-            makeBody((new Random().nextFloat() * JuicyShmup.GAME_WIDTH * PPM - sprite.getWidth() * sprite.getScaleX() * 2) + sprite.getWidth() * sprite.getScaleX() * 2, JuicyShmup.GAME_HEIGHT * PPM + sprite.getHeight() * sprite.getScaleY() / 2, "square");
+            makeBody((new Random().nextFloat() * JuicyShmup.GAME_WIDTH * PPM - sprite.getWidth() * sprite.getScaleX() * 2) + sprite.getWidth() * sprite.getScaleX() * 2, JuicyShmup.GAME_HEIGHT * PPM + (new Random().nextFloat() * 10 * sprite.getHeight() * sprite.getScaleY() / 2), "square");
             body.setUserData(info);
             body.setLinearVelocity(0, info.speed);
             sprite.setPosition(body.getPosition().x, body.getPosition().y);

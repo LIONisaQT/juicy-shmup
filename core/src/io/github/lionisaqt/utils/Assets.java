@@ -19,6 +19,7 @@ public class Assets {
     public final AssetDescriptor<Texture> bullet = new AssetDescriptor<>("effects/particle.png", Texture.class);
     public final AssetDescriptor<Texture> flash = new AssetDescriptor<>("textures/flash.png", Texture.class);
 
+    // TODO: Convert from Sound to Music and see if sound works on Android
     public final AssetDescriptor<Sound> shoot = new AssetDescriptor<>("sounds/laser2.mp3", Sound.class);
     public final AssetDescriptor<Sound> death1 = new AssetDescriptor<>("sounds/explode1.wav", Sound.class);
     public final AssetDescriptor<Sound> death2 = new AssetDescriptor<>("sounds/explode2.wav", Sound.class);

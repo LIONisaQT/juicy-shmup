@@ -155,26 +155,21 @@ public class EnemyDirector {
 
             if (scoreDelta > 200) {
                 // Game is too easy
-                Gdx.app.log(getClass().getSimpleName(), "Increasing difficulty");
                 baseMultiplier /= 1.5f;
                 previousScore = screen.getScore();
                 if (easyCount < 3) easyCount++;
             } else {
                 if (easyCount <= 0) {
                     // Game is too hard
-                    Gdx.app.log(getClass().getSimpleName(), "Lowering difficulty");
                     baseMultiplier *= 1.5f;
                     previousScore = screen.getScore();
                     easyCount = 3;
                 } else {
                     // Game is just right
-                    Gdx.app.log(getClass().getSimpleName(), "Just right");
                     baseMultiplier /= 1.20f;
                 }
                 easyCount--;
             }
-
-            Gdx.app.log(getClass().getSimpleName(), scoreDelta + ", " + baseMultiplier);
         }
     }
 

@@ -39,7 +39,6 @@ public class Enemy extends SpaceEntity implements Poolable {
         info.impact = 0.25f;
         info.friendly = false;
         info.isPlayer = false;
-        enemyDeathSound = game.assets.manager.get(game.assets.kill1);
     }
 
     /** Initializes important values if they're null, called after getting an enemy from the pool. */
@@ -70,6 +69,7 @@ public class Enemy extends SpaceEntity implements Poolable {
             light.setPosition(body.getPosition().x, body.getPosition().y + 1.1f);
         }
 
+	    enemyDeathSound = game.assets.manager.get(game.assets.kill1);
         deathSound = new Random().nextBoolean() ? game.assets.manager.get(game.assets.death1) : game.assets.manager.get(game.assets.death2);
     }
 
@@ -89,7 +89,7 @@ public class Enemy extends SpaceEntity implements Poolable {
         if (Math.abs(body.getLinearVelocity().x) >= Math.abs(info.speed)) body.setLinearVelocity(body.getLinearVelocity().x > 0 ? -info.speed : info.speed, body.getLinearVelocity().y);
 
         /* Kills enemy if offscreen */
-        if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() / 2 < 0) free();
+        if (body.getPosition().y + sprite.getHeight() * sprite.getScaleY() * 2 < 0) free();
     }
 
     /** Enemy-specific update method. Default enemy tries to snake and kamikaze into player.

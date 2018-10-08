@@ -39,7 +39,7 @@ public class EffectsManager {
     public RayHandler rayHandler;
     public Array<PointLight> lightEffects;  // Holds all light effects for dying entities
     public Array<PointLight> bgStars;       // Background stars
-    private final short numStars = 35;      // Number of background stars
+    private final short numStars = 45;      // Number of background stars
     private final short starSpeed = 9;      // Maximum speed of stars
     public Pool<PointLight> lightPool;      // Pointlight pool for entity deaths
 
@@ -107,7 +107,7 @@ public class EffectsManager {
         for (int i = 0; i < numStars; i++) {
             Random rng = new Random();
             PointLight p = lightPool.obtain();
-            p.setColor(rng.nextFloat(), rng.nextFloat(), rng.nextFloat(), rng.nextFloat() * 0.5f + 0.5f);
+            p.setColor(rng.nextFloat(), rng.nextFloat(), rng.nextFloat(), rng.nextFloat() * 0.5f + 0.4f);
             p.setDistance((rng.nextInt(200) + 100) * PPM);
 
             BodyDef bDef = new BodyDef();
@@ -153,7 +153,7 @@ public class EffectsManager {
         Random rng = new Random();
         for (PointLight p : bgStars) {
             if (p.getBody().getPosition().y < -p.getDistance()) {
-                p.setColor(rng.nextFloat(), rng.nextFloat(), rng.nextFloat(), rng.nextFloat() * 0.5f + 0.5f);
+                p.setColor(rng.nextFloat(), rng.nextFloat(), rng.nextFloat(), rng.nextFloat() * 0.5f + 0.4f);
                 p.setDistance((rng.nextInt(200) + 100) * PPM);
 
                 p.getBody().setTransform(rng.nextInt((int)(JuicyShmup.GAME_WIDTH * PPM)), JuicyShmup.GAME_HEIGHT * PPM + p.getDistance(), 0);

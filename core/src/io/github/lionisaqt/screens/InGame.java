@@ -99,13 +99,20 @@ public class InGame extends MyScreen {
                 state = State.PLAY;
                 break;
             case PLAY:
+	            if (game.currentSong.getVolume() < 1) {
+		            float vol = game.currentSong.getVolume();
+		            vol *= 1.01;
+		            game.currentSong.setVolume(vol);
+		            Gdx.app.log("Volume", game.currentSong.getVolume() + "");
+	            }
+
                 if (timeMultiplier != 1) normalizeGameSpeed(deltaTime);
 
                 world.step(1 / (60f * timeMultiplier), 6, 2);
 
                 player.update(deltaTime);
                 for (Bullet b : bullets) b.update(deltaTime);
-                director.update(deltaTime, player.body.getPosition());
+                director.update(deltaTime, player.info.hp, player.body.getPosition());
                 eManager.update(deltaTime, timeMultiplier, camera, viewport);
                 tManager.manageShake(deltaTime, timeMultiplier);
                 break;
@@ -327,6 +334,7 @@ public class InGame extends MyScreen {
         pauseButton.setTouchable(Touchable.disabled);
         pauseAnimation();
         state = State.PAUSE;
+        game.currentSong.setVolume(0.1f);
     }
 
     private void resumeGame() {

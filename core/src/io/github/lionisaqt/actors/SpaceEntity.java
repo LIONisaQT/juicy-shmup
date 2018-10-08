@@ -1,5 +1,6 @@
 package io.github.lionisaqt.actors;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -29,9 +30,10 @@ abstract class SpaceEntity extends Sprite {
     public Body body;       // Physics body
     Sprite sprite;          // Rendered image
     float scale;            // Used to convert pixels to box2d meters
-    EntityInfo info;        // Contains entity's information, passed into body's user data
+    public EntityInfo info;        // Contains entity's information, passed into body's user data
     PointLight light;       // Light emitted by this entity
     Color color;            // Light color to help tell friend from foe
+    Sound deathSound;       // Generic death sound
 
     /** Constructs a space entity.
      * @param screen Reference for in-game stuff */
@@ -54,8 +56,22 @@ abstract class SpaceEntity extends Sprite {
         body = world.createBody(bDef);
 
         FixtureDef fDef = new FixtureDef();
+
+        /* What category an object is */
         fDef.filter.categoryBits = info.friendly ? JuicyShmup.PLAYER_BIT : JuicyShmup.ENEMY_BIT | JuicyShmup.ITEM_BIT;
+
+        /* What categories they collide with */
         fDef.filter.maskBits = info.friendly ? JuicyShmup.ENEMY_BIT | JuicyShmup.ITEM_BIT : JuicyShmup.PLAYER_BIT;
+
+        /*
+        * Special case for Dogfighters to prevent pile-up
+        * TODO: Make dogfighters pile up side by side (use horizontal "spaces" in front of the player can they can fill, like Vermintide 2)
+        * */
+	    if (getClass().getSimpleName().equals("Dogfighter")) {
+	    	fDef.filter.categoryBits = JuicyShmup.DF_BIT;
+	    	fDef.filter.maskBits = JuicyShmup.DF_BIT;
+	    }
+
         Shape shape;
 
         switch (s) {

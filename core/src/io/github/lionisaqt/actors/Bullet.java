@@ -61,8 +61,10 @@ public class Bullet extends SpaceEntity implements Poolable {
             light.attachToBody(body);
         }
 
+        deathSound = info.friendly ? game.assets.manager.get(game.assets.hit1) : game.assets.manager.get(game.assets.hurt1);
+
         if (pew == null) pew = game.assets.manager.get(game.assets.shoot);
-        pew.play();
+        pew.play(0.25f);
     }
 
     @Override
@@ -88,6 +90,7 @@ public class Bullet extends SpaceEntity implements Poolable {
     @Override
     public void die() {
         super.die();
+        deathSound.play();
         free();
     }
 

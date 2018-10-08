@@ -2,6 +2,7 @@ package io.github.lionisaqt.actors;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
@@ -38,6 +39,9 @@ public class Player extends SpaceEntity {
     /* Muzzle flash lights */
     private PointLight muzzleLightLeft, muzzleLightRight;
 
+    /* Ensures death effect only plays once */
+    private boolean deathEffectPlay = true;
+
     /** Constructs a new player at the given coordinates.
      * @param game Reference to the game for assets
      * @param screen Reference for in-game stuff
@@ -47,7 +51,7 @@ public class Player extends SpaceEntity {
         super(game, screen);
         scale = 0.25f * PPM;
         fireDelay = 0.1f;
-        info.maxHp = 5000;
+        info.maxHp = 1;
         info.hp = info.maxHp;
         info.dmg = 100;
         info.speed = 15;
@@ -76,7 +80,7 @@ public class Player extends SpaceEntity {
     @Override
     public void update(float deltaTime) {
         if (info.hp <= 0) {
-            die();
+            playerDie();
             return;
         }
 
@@ -168,6 +172,34 @@ public class Player extends SpaceEntity {
             shotTimer += fireDelay;                                             // Add delay for next shot
             stateTimer += deltaTime;                                            // Adds time to animation timer
         }
+    }
+
+    /** Player-specific death effects. */
+    private void playerDie() {
+    	if (deathEffectPlay) {
+    		deathEffectPlay = false;
+		    body.setActive(false);
+
+		    sprite.setAlpha(0);
+		    flashLeft.setAlpha(0);
+		    flashRight.setAlpha(0);
+
+		    muzzleLightLeft.setActive(false);
+		    muzzleLightRight.setActive(false);
+		    light.setActive(false);
+
+		    screen.tManager.addTrauma(info.impact);
+
+		    // Explosion light effect
+		    PointLight p = screen.eManager.lightPool.obtain();
+		    p.setColor(color);
+		    p.setDistance(2500 * info.impact * PPM);
+		    p.setPosition(body.getPosition());
+		    screen.eManager.lightEffects.add(p);
+		    game.currentSong.setVolume(0.25f);
+	    }
+
+    	screen.timeMultiplier = 5f;
     }
 
     public void draw(SpriteBatch batch) {

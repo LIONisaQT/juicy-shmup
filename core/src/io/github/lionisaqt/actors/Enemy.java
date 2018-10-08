@@ -21,7 +21,8 @@ public class Enemy extends SpaceEntity implements Poolable {
     /* Reference to director for the pool and enemy array */
     EnemyDirector director;
 
-    Sound deathSound;
+    /* Enemy-specific death sound */
+    private Sound enemyDeathSound;
 
     /** Constructs a new enemy.
      * @param game Reference to the game for assets
@@ -38,6 +39,7 @@ public class Enemy extends SpaceEntity implements Poolable {
         info.impact = 0.25f;
         info.friendly = false;
         info.isPlayer = false;
+        enemyDeathSound = game.assets.manager.get(game.assets.kill1);
     }
 
     /** Initializes important values if they're null, called after getting an enemy from the pool. */
@@ -68,7 +70,7 @@ public class Enemy extends SpaceEntity implements Poolable {
             light.setPosition(body.getPosition().x, body.getPosition().y + 1.1f);
         }
 
-        if (deathSound == null) deathSound = new Random().nextBoolean() ? game.assets.manager.get(game.assets.death1) : game.assets.manager.get(game.assets.death2);
+        deathSound = new Random().nextBoolean() ? game.assets.manager.get(game.assets.death1) : game.assets.manager.get(game.assets.death2);
     }
 
     @Override
@@ -78,7 +80,7 @@ public class Enemy extends SpaceEntity implements Poolable {
 
         /* Engine particle effects! */
         PooledEffect p = screen.eManager.enemyEnginePool.obtain();
-        p.setPosition(body.getPosition().x, body.getPosition().y + 1);
+        p.setPosition(body.getPosition().x, body.getPosition().y + 0.75f);
         p.scaleEffect(scale);
         p.start();
         screen.eManager.effects.add(p);
@@ -92,19 +94,26 @@ public class Enemy extends SpaceEntity implements Poolable {
 
     /** Enemy-specific update method. Default enemy tries to snake and kamikaze into player.
      * @param deltaTime Time since last frame was called
+     * @param playerHp Player's current hp
      * @param  playerPos Position to target */
-    public void update(float deltaTime, Vector2 playerPos) {
+    public void update(float deltaTime, int playerHp, Vector2 playerPos) {
         if (info.hp <= 0) {
             die();
             return;
         }
-        body.setLinearVelocity(body.getLinearVelocity().x + (body.getPosition().x < playerPos.x ? 1 : -1) * (float)(-info.speed / 4 / Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y)), info.speed);
+
+        if (playerHp > 0)
+	        body.setLinearVelocity(body.getLinearVelocity().x + (body.getPosition().x < playerPos.x ? 1 : -1) * (float)(-info.speed / 4 / Math.hypot(body.getPosition().x - playerPos.x, body.getPosition().y - playerPos.y)), info.speed);
+        else
+        	body.setLinearVelocity(0, info.speed);
+
         update(deltaTime);
     }
 
     @Override
     public void die() {
-        deathSound.play();
+    	deathSound.play();
+    	enemyDeathSound.play();
 
         PooledEffect p = screen.eManager.enemyDeathPool.obtain();
         p.setPosition(body.getPosition().x, body.getPosition().y);
@@ -132,7 +141,6 @@ public class Enemy extends SpaceEntity implements Poolable {
         color = null;
         body = null;
         sprite = null;
-        deathSound = null;
         info.hp = info.maxHp;
     }
 }

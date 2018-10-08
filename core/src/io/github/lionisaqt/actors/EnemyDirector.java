@@ -85,10 +85,12 @@ public class EnemyDirector {
     }
 
     /** Called every frame. Handles any logic.
-     * @param deltaTime Time since last frame was called */
-    public void update(float deltaTime, Vector2 playerPos) {
+     * @param deltaTime Time since last frame was called
+     * @param playerHp Player's current hp
+     * @param playerPos Player's position */
+    public void update(float deltaTime, int playerHp, Vector2 playerPos) {
         spawnEnemy(deltaTime);
-        updateEnemies(deltaTime, playerPos);
+        updateEnemies(deltaTime, playerHp, playerPos);
         updateDifficulty();
         updateDelta(deltaTime);
     }
@@ -123,8 +125,8 @@ public class EnemyDirector {
         }
     }
 
-    private void updateEnemies(float deltaTime, Vector2 playerPos) {
-        for (Enemy e : enemies) e.update(deltaTime, playerPos);
+    private void updateEnemies(float deltaTime, int playerHp, Vector2 playerPos) {
+        for (Enemy e : enemies) e.update(deltaTime, playerHp, playerPos);
     }
 
     /** Updates difficulty based on raw score. Should never go down. */
@@ -140,6 +142,8 @@ public class EnemyDirector {
      * More spawns --> get overwhelmed --> kill slower --> lower score delta --> decreased spawns. This means
      * the game should theoretically always be providing sizable challenge for the player.
      * TODO: Factor in player health delta maybe?
+     * TODO: Instead of timed checks, check time since score last increased. Less time --> faster spawns.
+     * TODO: After certain amount of time has elapsed, reset score multiplier.
      * */
     private void updateDelta(float deltaTime) {
         checkDelta -= deltaTime;

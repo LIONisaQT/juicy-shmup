@@ -94,8 +94,7 @@ public class Bullet extends SpaceEntity implements Poolable {
         free();
     }
 
-    /** Removes bullet from the active array of bullets and frees it from the pool. Sends body to
-     * the array of dead bodies for processing. */
+    /** Removes bullet from the active array of bullets and frees it from the pool. */
     public void free() {
         screen.bullets.removeValue(this, false);
         screen.bulletPool.free(this);

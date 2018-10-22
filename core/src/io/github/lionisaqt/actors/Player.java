@@ -126,6 +126,7 @@ public class Player extends SpaceEntity {
                 if (Gdx.input.isKeyPressed(Input.Keys.UP)) ySpeed += info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) ySpeed += -info.speed;
                 if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) shoot(deltaTime);
+                if (Gdx.input.isKeyJustPressed(Input.Keys.K)) info.hp = 0;
                 else isShooting = false;
             default:
                 break;

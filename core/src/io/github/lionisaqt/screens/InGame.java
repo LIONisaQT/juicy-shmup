@@ -128,8 +128,8 @@ public class InGame extends MyScreen {
             case iOS:
                 break;
             case Desktop:
-                if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) decreaseGameSpeed();
-                if (Gdx.input.isKeyJustPressed(Input.Keys.W)) increaseGameSpeed();
+                if (Gdx.input.isKeyPressed(Input.Keys.Q)) decreaseGameSpeed();
+                if (Gdx.input.isKeyPressed(Input.Keys.W)) increaseGameSpeed();
                 if (Gdx.input.isKeyJustPressed(Input.Keys.O)) addScore(10000);
                 if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
                     if (pauseButton.isTouchable()) pause();
